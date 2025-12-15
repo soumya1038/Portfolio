@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'John Doe - Portfolio',
+  title: `${process.env.NEXT_PUBLIC_PORTFOLIO_NAME || 'Your Name'} - Portfolio`,
   description: 'Modern, interactive portfolio showcase',
 }
 

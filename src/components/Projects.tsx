@@ -12,7 +12,7 @@ interface ProjectsProps {
   onDataChange?: (data: PortfolioData) => void
 }
 
-export default function Projects({ data, onDataChange }: ProjectsProps) {
+export default function Projects({ data, isEditMode, onDataChange }: ProjectsProps) {
   const router = useRouter()
   const [isAdmin, setIsAdmin] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
@@ -22,17 +22,35 @@ export default function Projects({ data, onDataChange }: ProjectsProps) {
     setIsAdmin(!!token)
   }, [])
 
-  const handleCreate = (project: Project) => {
-    // ensure unique id
+  const handleCreate = async (project: Project) => {
     const maxId = data.projects.reduce((acc, p) => Math.max(acc, p.id), 0)
     const newId = project.id || maxId + 1
     const newProject = { ...project, id: newId }
     const updated: PortfolioData = { ...data, projects: [newProject, ...data.projects] }
-    localStorage.setItem('portfolioData', JSON.stringify(updated))
-    if (onDataChange) onDataChange(updated)
-    setModalOpen(false)
-    // navigate to the new project page
-    router.push(`/project/${newId}`)
+    
+    // Save to file first
+    try {
+      const response = await fetch('/api/portfolio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated)
+      })
+      
+      if (response.ok) {
+        if (onDataChange) onDataChange(updated)
+        setModalOpen(false)
+        router.push(`/project/${newId}`)
+      }
+    } catch (error) {
+      alert('Failed to create project')
+    }
+  }
+
+  const handleDelete = (projectId: number) => {
+    if (confirm('Delete this project?')) {
+      const updated: PortfolioData = { ...data, projects: data.projects.filter(p => p.id !== projectId) }
+      if (onDataChange) onDataChange(updated)
+    }
   }
 
   return (
@@ -40,7 +58,7 @@ export default function Projects({ data, onDataChange }: ProjectsProps) {
       <div className="container-custom">
         <div className="flex items-center justify-between mb-8">
           <h2 className="heading text-white text-left">Featured Projects</h2>
-          {isAdmin && (
+          {isEditMode && (
             <div>
               <button onClick={() => setModalOpen(true)} className="px-4 py-2 bg-indigo-600 rounded-lg font-semibold text-white">
                 + New Project

@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { portfolioData, PortfolioData, Project, CustomSection } from '@/data/portfolio'
+import { portfolioData, PortfolioData, Project, CustomSection, LinkSection } from '@/data/portfolio'
 import { compressImage } from '@/utils/imageCompress'
 
 export default function ProjectPage({ params }: { params: { id: string } }) {
@@ -21,14 +21,34 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
     const adminToken = localStorage.getItem('admin_token')
     if (adminToken) setIsAdmin(true)
 
-    const savedData = localStorage.getItem('portfolioData')
-    if (savedData) {
-      const parsed = JSON.parse(savedData)
-      setData(parsed)
+    // Load from server first
+    const loadData = async () => {
+      try {
+        const response = await fetch('/api/portfolio')
+        if (response.ok) {
+          const serverData = await response.json()
+          setData(serverData)
+          setLoading(false)
+          return
+        }
+      } catch (error) {
+        console.log('Server data not available')
+      }
+      
+      // Fallback to localStorage
+      const savedData = localStorage.getItem('portfolioData')
+      if (savedData) {
+        const parsed = JSON.parse(savedData)
+        setData(parsed)
+      }
+      setLoading(false)
     }
+    
+    loadData()
   }, [])
 
   const project = data.projects.find((p) => p.id === parseInt(params.id))
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     setEditProject(project ? { ...project, sections: project.sections || [] } : null)
@@ -42,13 +62,25 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
     setImageError('')
   }
 
-  const saveEdit = () => {
+  const saveEdit = async () => {
     if (!editProject) return
     const updated = { ...data, projects: data.projects.map((p) => (p.id === editProject.id ? editProject : p)) }
-    localStorage.setItem('portfolioData', JSON.stringify(updated))
-    setData(updated)
-    setIsEditMode(false)
-    router.replace(`/project/${editProject.id}`)
+    
+    try {
+      const response = await fetch('/api/portfolio', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updated)
+      })
+      
+      if (response.ok) {
+        setData(updated)
+        setIsEditMode(false)
+        router.replace(`/project/${editProject.id}`)
+      }
+    } catch (error) {
+      alert('Failed to save changes')
+    }
   }
 
   const deleteProject = () => {
@@ -81,13 +113,39 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
   const addSection = () => {
     if (!editProject) return
     const sections = editProject.sections || []
-    // Prepend new section so it appears right under the Description
     const id = Date.now().toString()
     setEditProject({
       ...editProject,
-      sections: [{ id, title: 'New Section', content: '' }, ...sections],
+      sections: [{ id, title: 'New Section', content: '', imagePosition: 'top' }, ...sections],
     })
     setLastAddedSectionId(id)
+  }
+
+  const addLinkSection = () => {
+    if (!editProject) return
+    const linkSections = editProject.linkSections || []
+    const id = Date.now().toString()
+    setEditProject({
+      ...editProject,
+      linkSections: [...linkSections, { id, heading: 'New Link', link: '' }]
+    })
+  }
+
+  const removeLinkSection = (sectionId: string) => {
+    if (!editProject) return
+    setEditProject({
+      ...editProject,
+      linkSections: (editProject.linkSections || []).filter(s => s.id !== sectionId)
+    })
+  }
+
+  const updateLinkSection = (sectionId: string, field: keyof LinkSection, value: string) => {
+    if (!editProject) return
+    const linkSections = editProject.linkSections || []
+    setEditProject({
+      ...editProject,
+      linkSections: linkSections.map(s => s.id === sectionId ? { ...s, [field]: value } : s)
+    })
   }
 
   const removeSection = (sectionId: string) => {
@@ -173,6 +231,14 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
       )
     })
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
+        <div className="text-white text-xl">Loading...</div>
+      </div>
+    )
+  }
+
   if (!project) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
@@ -204,7 +270,6 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
             ) : (
               <h1 className="text-4xl md:text-5xl font-bold mb-2">{project.title}</h1>
             )}
-            <div className="text-sm text-indigo-100">Project ID: {project.id}</div>
           </div>
 
           <div className="flex items-center gap-3 flex-wrap justify-end">
@@ -334,6 +399,46 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
                           ✕
                         </button>
                       </div>
+                      
+                      <div className="mb-3">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) {
+                              const reader = new FileReader()
+                              reader.onload = (e) => {
+                                updateSection(section.id, 'image', e.target?.result as string)
+                              }
+                              reader.readAsDataURL(file)
+                            }
+                          }}
+                          className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                        />
+                        {section.image && (
+                          <button
+                            onClick={() => updateSection(section.id, 'image', '')}
+                            className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-sm"
+                          >
+                            Remove Image
+                          </button>
+                        )}
+                      </div>
+                      
+                      <div className="mb-3">
+                        <select
+                          value={section.imagePosition || 'top'}
+                          onChange={(e) => updateSection(section.id, 'imagePosition', e.target.value)}
+                          className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                        >
+                          <option value="top">Image Top</option>
+                          <option value="bottom">Image Bottom</option>
+                          <option value="left">Image Left</option>
+                          <option value="right">Image Right</option>
+                        </select>
+                      </div>
+                      
                       <textarea
                         value={section.content}
                         onChange={(e) => updateSection(section.id, 'content', e.target.value)}
@@ -345,9 +450,51 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
                   ) : (
                     <>
                       <h2 className="text-3xl font-bold text-indigo-400 mb-4">{section.title}</h2>
-                      <p className="text-xl text-gray-300 leading-relaxed whitespace-pre-wrap">{section.content}</p>
+                      <div className={`flex items-center justify-center ${
+                        section.imagePosition === 'top' || section.imagePosition === 'bottom' ? 'flex-col' :
+                        section.imagePosition === 'left' ? 'flex-row' : 'flex-row-reverse'
+                      }`}>
+                        {section.imagePosition === 'top' && section.image && (
+                          <img 
+                            src={section.image} 
+                            alt={section.title} 
+                            className="w-full max-w-2xl h-auto rounded-lg object-cover mx-auto mb-4"
+                          />
+                        )}
+                        
+                        <div className={`text-center ${
+                          section.imagePosition === 'left' || section.imagePosition === 'right' ? 'flex-1 px-4' : ''
+                        }`}>
+                          <p className="text-xl text-gray-300 leading-relaxed whitespace-pre-wrap">{section.content}</p>
+                        </div>
+                        
+                        {section.imagePosition === 'left' && section.image && (
+                          <img 
+                            src={section.image} 
+                            alt={section.title} 
+                            className="w-48 sm:w-56 md:w-64 lg:w-72 h-auto rounded-lg object-cover mr-4"
+                          />
+                        )}
+                        
+                        {section.imagePosition === 'right' && section.image && (
+                          <img 
+                            src={section.image} 
+                            alt={section.title} 
+                            className="w-48 sm:w-56 md:w-64 lg:w-72 h-auto rounded-lg object-cover ml-4"
+                          />
+                        )}
+                        
+                        {section.imagePosition === 'bottom' && section.image && (
+                          <img 
+                            src={section.image} 
+                            alt={section.title} 
+                            className="w-full max-w-2xl h-auto rounded-lg object-cover mx-auto mt-4"
+                          />
+                        )}
+                      </div>
                     </>
                   )}
+
                 </div>
               ))
             ) : (
@@ -422,6 +569,62 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
             <p className="text-gray-400">No project link provided</p>
           )}
         </section>
+
+        {/* Link Sections */}
+        {isEditMode && (
+          <div className="mb-12">
+            <button onClick={addLinkSection} className="px-6 py-3 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700">
+              + Add Link Section
+            </button>
+          </div>
+        )}
+        
+        {(editProject?.linkSections && editProject.linkSections.length > 0) && (
+          editProject.linkSections.map((linkSection) => (
+            <section key={linkSection.id} className="mb-12">
+              <h2 className="text-3xl font-bold text-indigo-400 mb-6">{linkSection.heading}</h2>
+              {isEditMode ? (
+                <div>
+                  <div className="flex items-center gap-2 mb-3">
+                    <label className="block text-sm text-gray-300 w-24">Heading:</label>
+                    <input
+                      value={linkSection.heading}
+                      onChange={(e) => updateLinkSection(linkSection.id, 'heading', e.target.value)}
+                      placeholder="Link Heading"
+                      className="flex-1 px-4 py-3 rounded-lg bg-white text-gray-900"
+                    />
+                    <button
+                      onClick={() => removeLinkSection(linkSection.id)}
+                      className="px-3 py-2 bg-red-600 text-white rounded-lg"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                  <div>
+                    <label className="block mb-2 text-sm text-gray-300">Link</label>
+                    <input
+                      value={linkSection.link}
+                      onChange={(e) => updateLinkSection(linkSection.id, 'link', e.target.value)}
+                      placeholder="https://..."
+                      className="w-full px-4 py-3 rounded-lg bg-white text-gray-900"
+                    />
+                  </div>
+                </div>
+              ) : linkSection.link ? (
+                <a
+                  href={linkSection.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-lg rounded-lg transition shadow-lg hover:shadow-indigo-500/50"
+                >
+                  Open {linkSection.heading} →
+                </a>
+              ) : (
+                <p className="text-gray-400">No link provided</p>
+              )}
+            </section>
+          ))
+        )}
 
         {/* Other Projects with Filter */}
         {filteredProjects.length > 0 && (

@@ -103,23 +103,7 @@ export default function Skills({ data, isEditMode, onDataChange }: SkillsProps) 
           </div>
         )}
 
-        {/* Technologies Used Section */}
-        <div className="mt-16">
-          <h3 className="text-2xl font-bold text-gray-900 text-center mb-8">Technologies Used</h3>
-          <div className="flex flex-wrap justify-center gap-4">
-            {['Next.js', 'TypeScript', 'Stripe', 'MongoDB'].map((tech, idx) => (
-              <span key={idx} className="bg-white border border-gray-300 px-4 py-2 rounded-full text-gray-700 flex items-center gap-2">
-                {tech}
-                <button className="text-red-500 hover:text-red-700">✕</button>
-              </span>
-            ))}
-          </div>
-          <div className="text-center mt-6">
-            <button className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg font-medium">
-              + Add Tech
-            </button>
-          </div>
-        </div>
+
 
         {/* Add Custom Section Button */}
         {isEditMode && (

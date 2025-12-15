@@ -25,30 +25,48 @@ A modern, interactive portfolio website built with Next.js, TypeScript, and Tail
 - Node.js 16+ 
 - npm or yarn
 
-### Installation
+### Quick Setup
 
-1. Install dependencies:
+1. **Clone or download** this repository
+
+2. **Install dependencies:**
 ```bash
 npm install
 ```
 
-2. Start the development server:
+3. **Personalize your portfolio:**
+```bash
+# Copy the environment template
+cp .env.local.example .env.local
+```
+
+Edit `.env.local` with your details:
+```env
+NEXT_PUBLIC_ADMIN_PASSWORD=your-secure-password
+NEXT_PUBLIC_PORTFOLIO_NAME=Your Name
+```
+
+4. **Start development server:**
 ```bash
 npm run dev
 ```
 
-3. Open [http://localhost:3000](http://localhost:3000) in your browser
+5. **Open [http://localhost:3000](http://localhost:3000)** and click the 🔐 icon to edit your portfolio
 
 ### Editing Your Portfolio
 
-Click the **"Edit"** button in the top-right corner of the navbar to open the edit panel. You can update:
-- Your name and professional title
-- Your bio/about section
-- Email address
-- Social media links (GitHub, LinkedIn, Twitter)
-- Skills
+1. **Set your admin password** in `.env.local`
+2. **Click the 🔐 icon** in the bottom-right corner
+3. **Enter your password** to access edit mode
+4. **Click "Edit"** to modify:
+   - Your name and professional title
+   - Your bio/about section
+   - Email address
+   - Social media links
+   - Skills
+   - Custom sections
 
-Changes are saved locally in your browser's localStorage and persist across sessions.
+Changes are saved locally and persist across sessions.
 
 ## Building for Production
 

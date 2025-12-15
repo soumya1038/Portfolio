@@ -68,7 +68,6 @@ export default function EditPanel({ data, onUpdate, onClose }: EditPanelProps) {
 
   const handleSave = () => {
     onUpdate(formData)
-    alert('Portfolio updated! Changes saved locally.')
   }
 
   return (
