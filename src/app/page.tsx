@@ -11,6 +11,7 @@ import Contact from '@/components/Contact'
 import Footer from '@/components/Footer'
 import AdminAuth from '@/components/AdminAuth'
 import EditToolbar from '@/components/EditToolbar'
+import DynamicTitle from '@/components/DynamicTitle'
 
 export default function Home() {
   const [data, setData] = useState(portfolioData)
@@ -64,7 +65,8 @@ export default function Home() {
 
   return (
     <main>
-      <Navbar isAdmin={isAdmin} onAdminLogout={handleAdminLogout} />
+      <DynamicTitle name={(isEditMode ? editData : data).name} />
+      <Navbar isAdmin={isAdmin} onAdminLogout={handleAdminLogout} data={isEditMode ? editData : data} />
       {isEditMode && isAdmin && (
         <EditToolbar onSave={handleSave} onCancel={handleCancel} />
       )}
