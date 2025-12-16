@@ -12,7 +12,7 @@ export default function AdminAuth({ onLogin }: AdminAuthProps) {
   const [error, setError] = useState('')
 
   // Get password from environment variable or use default
-  const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD || 'portfolio123'
+  const ADMIN_PASSWORD = process.env.NEXT_PUBLIC_ADMIN_PASSWORD
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
