@@ -15,7 +15,7 @@ export default function Skills({ data, isEditMode, onDataChange }: SkillsProps) 
 
   const handleSkillChange = (index: number, value: string) => {
     if (onDataChange) {
-      const newSkills = [...data.skills]
+      const newSkills = [...(data.skills || [])]
       newSkills[index] = value
       onDataChange({ ...data, skills: newSkills })
     }
@@ -23,13 +23,13 @@ export default function Skills({ data, isEditMode, onDataChange }: SkillsProps) 
 
   const handleAddSkill = () => {
     if (onDataChange) {
-      onDataChange({ ...data, skills: [...data.skills, 'New Skill'] })
+      onDataChange({ ...data, skills: [...(data.skills || []), 'New Skill'] })
     }
   }
 
   const handleRemoveSkill = (index: number) => {
     if (onDataChange) {
-      const newSkills = data.skills.filter((_, i) => i !== index)
+      const newSkills = (data.skills || []).filter((_, i) => i !== index)
       onDataChange({ ...data, skills: newSkills })
     }
   }
@@ -64,7 +64,7 @@ export default function Skills({ data, isEditMode, onDataChange }: SkillsProps) 
       <div className="container-custom">
         <h2 className="heading text-gray-900 text-center mb-16">My Skills</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-          {data.skills.map((skill, idx) => (
+          {data.skills?.map((skill, idx) => (
             <div
               key={idx}
               className={`bg-gradient-to-br from-indigo-50 to-pink-50 p-6 rounded-xl text-center hover:shadow-lg transition-all duration-300 ${
