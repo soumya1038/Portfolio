@@ -1,24 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/database'
+import { writeFile, readFile } from 'fs/promises'
+import { join } from 'path'
+
+const DATA_FILE = join(process.cwd(), 'portfolio-data.json')
 
 export async function GET() {
   try {
-    const [admin, projects] = await Promise.all([
-      db.getAdmin(),
-      db.getProjects()
-    ])
-    return NextResponse.json({ admin, projects })
+    const data = await readFile(DATA_FILE, 'utf8')
+    return NextResponse.json(JSON.parse(data))
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to fetch data' }, { status: 500 })
+    return NextResponse.json({ error: 'No data found' }, { status: 404 })
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
-    const { admin } = await request.json()
-    await db.saveAdmin(admin)
+    const data = await request.json()
+    await writeFile(DATA_FILE, JSON.stringify(data, null, 2))
     return NextResponse.json({ success: true })
   } catch (error) {
-    return NextResponse.json({ error: 'Failed to save admin data' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to save' }, { status: 500 })
   }
 }
