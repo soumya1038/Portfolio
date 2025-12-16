@@ -32,7 +32,7 @@ export default function Contact({ data }: ContactProps) {
           </div>
 
           <div className="flex justify-center gap-6">
-            {data.social.github && (
+            {data.social?.github && (
               <a
                 href={data.social.github}
                 target="_blank"
@@ -45,7 +45,7 @@ export default function Contact({ data }: ContactProps) {
                 </svg>
               </a>
             )}
-            {data.social.linkedin && (
+            {data.social?.linkedin && (
               <a
                 href={data.social.linkedin}
                 target="_blank"
@@ -58,7 +58,7 @@ export default function Contact({ data }: ContactProps) {
                 </svg>
               </a>
             )}
-            {data.social.twitter && (
+            {data.social?.twitter && (
               <a
                 href={data.social.twitter}
                 target="_blank"
