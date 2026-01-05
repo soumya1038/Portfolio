@@ -134,32 +134,34 @@ export default function Home() {
     )
   }
 
+  const displayData = isEditMode ? editData : data
+
   return (
     <main>
-      <DynamicTitle name={(isEditMode ? editData : data).name} />
-      <Navbar isAdmin={isAdmin} onAdminLogout={handleAdminLogout} data={isEditMode ? editData : data} />
+      <DynamicTitle name={displayData?.name ?? 'Portfolio'} />
+      <Navbar isAdmin={isAdmin} onAdminLogout={handleAdminLogout} data={displayData} />
       {isEditMode && isAdmin && (
         <EditToolbar onSave={handleSave} onCancel={handleCancel} isLoading={isLoading} />
       )}
       {!isAdmin && <AdminAuth onLogin={handleAdminLogin} />}
       <Hero
-        data={isEditMode ? editData : data}
+        data={displayData}
         isEditMode={isEditMode}
         onDataChange={handleEditChange}
       />
       <About
-        data={isEditMode ? editData : data}
+        data={displayData}
         isEditMode={isEditMode}
         onDataChange={handleEditChange}
       />
-      <Projects data={isEditMode ? editData : data} isEditMode={isEditMode} onDataChange={handleEditChange} />
+      <Projects data={displayData} isEditMode={isEditMode} onDataChange={handleEditChange} />
       <Skills
-        data={isEditMode ? editData : data}
+        data={displayData}
         isEditMode={isEditMode}
         onDataChange={handleEditChange}
       />
-      <Contact data={isEditMode ? editData : data} />
-      <Footer data={isEditMode ? editData : data} />
+      <Contact data={displayData} />
+      <Footer data={displayData} />
 
       {isAdmin && !isEditMode && (
         <button
