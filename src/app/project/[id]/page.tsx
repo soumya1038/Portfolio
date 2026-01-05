@@ -8,13 +8,14 @@ import { compressImage } from '@/utils/imageCompress'
 
 export default function ProjectPage({ params }: { params: { id: string } }) {
   const router = useRouter()
-  const [data, setData] = useState(portfolioData)
+  const [data, setData] = useState<PortfolioData | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
   const [editProject, setEditProject] = useState<Project | null>(null)
   const [filterSearch, setFilterSearch] = useState('')
   const [imageError, setImageError] = useState('')
   const [lastAddedSectionId, setLastAddedSectionId] = useState<string | null>(null)
+  const [loading, setLoading] = useState(true)
   const titleRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
   useEffect(() => {
@@ -35,20 +36,19 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
         console.log('Server data not available')
       }
       
-      // Fallback to localStorage
-      const savedData = localStorage.getItem('portfolioData')
-      if (savedData) {
-        const parsed = JSON.parse(savedData)
-        setData(parsed)
+      // Fallback to default data
+      const defaultData = { ...portfolioData }
+      if (!defaultData.customSections) {
+        defaultData.customSections = []
       }
+      setData(defaultData)
       setLoading(false)
     }
     
     loadData()
   }, [])
 
-  const project = data.projects.find((p) => p.id === parseInt(params.id))
-  const [loading, setLoading] = useState(true)
+  const project = data?.projects.find((p) => p.id === parseInt(params.id))
 
   useEffect(() => {
     setEditProject(project ? { ...project, sections: project.sections || [] } : null)
@@ -63,13 +63,17 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
   }
 
   const saveEdit = async () => {
-    if (!editProject) return
+    if (!editProject || !data) return
     const updated = { ...data, projects: data.projects.map((p) => (p.id === editProject.id ? editProject : p)) }
     
     try {
+      const password = process.env.NEXT_PUBLIC_ADMIN_PASSWORD
       const response = await fetch('/api/portfolio', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${password}`
+        },
         body: JSON.stringify(updated)
       })
       
@@ -84,10 +88,9 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
   }
 
   const deleteProject = () => {
-    if (!project) return
+    if (!project || !data) return
     if (!confirm('Delete this project? This action cannot be undone.')) return
     const updated = { ...data, projects: data.projects.filter((p) => p.id !== project.id) }
-    localStorage.setItem('portfolioData', JSON.stringify(updated))
     setData(updated)
     router.push('/#projects')
   }
@@ -218,23 +221,31 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
     updateEditField('image', undefined)
   }
 
-  const filteredProjects = data.projects
-    .filter((p) => p.id !== project?.id)
-    .filter((p) => {
-      if (!filterSearch) return true
-      const search = filterSearch.toLowerCase()
-      return (
-        p.title.toLowerCase().startsWith(search) ||
-        p.title.toLowerCase().includes(search) ||
-        p.description.toLowerCase().includes(search) ||
-        p.technologies.some((t) => t.toLowerCase().includes(search))
-      )
-    })
+  const filteredProjects = data
+    ? data.projects
+        .filter((p) => p.id !== project?.id)
+        .filter((p) => {
+          if (!filterSearch) return true
+          const search = filterSearch.toLowerCase()
+          return (
+            p.title.toLowerCase().startsWith(search) ||
+            p.title.toLowerCase().includes(search) ||
+            p.description.toLowerCase().includes(search) ||
+            p.technologies.some((t) => t.toLowerCase().includes(search))
+          )
+        })
+    : []
 
-  if (loading) {
+  if (loading || !data) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center">
-        <div className="text-white text-xl">Loading...</div>
+        <div className="text-center">
+          <div className="mb-6">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-700 border-t-indigo-500 mx-auto"></div>
+          </div>
+          <h2 className="text-2xl font-bold text-white mb-2">Loading Project Details</h2>
+          <p className="text-gray-400">Please wait...</p>
+        </div>
       </div>
     )
   }

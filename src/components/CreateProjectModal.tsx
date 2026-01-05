@@ -3,14 +3,16 @@
 import { useState } from 'react'
 import { Project } from '@/data/portfolio'
 import { fetchGitHubRepo } from '@/utils/imageCompress'
+import { logger } from '@/lib/logger'
 
 interface Props {
   isOpen: boolean
   onClose: () => void
   onCreate: (project: Project) => void
+  isLoading?: boolean
 }
 
-export default function CreateProjectModal({ isOpen, onClose, onCreate }: Props) {
+export default function CreateProjectModal({ isOpen, onClose, onCreate, isLoading = false }: Props) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [link, setLink] = useState('')
@@ -33,8 +35,11 @@ export default function CreateProjectModal({ isOpen, onClose, onCreate }: Props)
       setLink(repo.link)
       setTechnologies(repo.technologies.join(', '))
       setRepoUrl('')
+      logger.info('GitHub repository imported successfully', { repo: repoUrl })
     } catch (err) {
-      setRepoError(err instanceof Error ? err.message : 'Failed to import repository')
+      const message = err instanceof Error ? err.message : 'Failed to import repository'
+      setRepoError(message)
+      logger.error('Failed to import GitHub repository', err)
     } finally {
       setIsLoadingRepo(false)
     }
@@ -46,12 +51,17 @@ export default function CreateProjectModal({ isOpen, onClose, onCreate }: Props)
       .map((t) => t.trim())
       .filter(Boolean)
 
+    if (!title.trim()) {
+      setRepoError('Project title is required')
+      return
+    }
+
     const newProject: Project = {
-      id: Date.now(),
-      title: title || 'New Project',
-      description: description || '',
+      id: Math.floor(Math.random() * 1000000),
+      title: title.trim(),
+      description: description.trim(),
       technologies: techs,
-      link: link || undefined,
+      link: link.trim() || undefined,
       sections: [],
     }
 
@@ -82,11 +92,12 @@ export default function CreateProjectModal({ isOpen, onClose, onCreate }: Props)
               }}
               placeholder="https://github.com/username/repo"
               className="flex-1 p-3 rounded bg-gray-800 text-white"
+              disabled={isLoadingRepo || isLoading}
             />
             <button
               onClick={handleImportFromGitHub}
-              disabled={isLoadingRepo || !repoUrl.trim()}
-              className="px-4 py-2 bg-indigo-600 rounded-lg font-semibold disabled:opacity-50"
+              disabled={isLoadingRepo || !repoUrl.trim() || isLoading}
+              className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed transition"
             >
               {isLoadingRepo ? 'Loading...' : 'Import'}
             </button>
@@ -94,21 +105,66 @@ export default function CreateProjectModal({ isOpen, onClose, onCreate }: Props)
           {repoError && <p className="text-red-400 text-sm">{repoError}</p>}
         </div>
 
-        <label className="block mb-2 text-sm text-gray-300">Title</label>
-        <input value={title} onChange={(e) => setTitle(e.target.value)} className="w-full p-3 rounded bg-gray-800 text-white mb-4" />
+        <label className="block mb-2 text-sm text-gray-300">Title *</label>
+        <input 
+          value={title} 
+          onChange={(e) => setTitle(e.target.value)} 
+          className="w-full p-3 rounded bg-gray-800 text-white mb-4 border border-gray-700 focus:border-indigo-500 focus:outline-none transition"
+          disabled={isLoading}
+          placeholder="Project title"
+        />
 
         <label className="block mb-2 text-sm text-gray-300">Description</label>
-        <textarea value={description} onChange={(e) => setDescription(e.target.value)} rows={4} className="w-full p-3 rounded bg-gray-800 text-white mb-4" />
+        <textarea 
+          value={description} 
+          onChange={(e) => setDescription(e.target.value)} 
+          rows={4} 
+          className="w-full p-3 rounded bg-gray-800 text-white mb-4 border border-gray-700 focus:border-indigo-500 focus:outline-none transition"
+          disabled={isLoading}
+          placeholder="Project description"
+        />
 
         <label className="block mb-2 text-sm text-gray-300">Link (optional)</label>
-        <input value={link} onChange={(e) => setLink(e.target.value)} className="w-full p-3 rounded bg-gray-800 text-white mb-4" />
+        <input 
+          value={link} 
+          onChange={(e) => setLink(e.target.value)} 
+          className="w-full p-3 rounded bg-gray-800 text-white mb-4 border border-gray-700 focus:border-indigo-500 focus:outline-none transition"
+          disabled={isLoading}
+          placeholder="https://example.com"
+          type="url"
+        />
 
         <label className="block mb-2 text-sm text-gray-300">Technologies (comma-separated)</label>
-        <input value={technologies} onChange={(e) => setTechnologies(e.target.value)} className="w-full p-3 rounded bg-gray-800 text-white mb-6" />
+        <input 
+          value={technologies} 
+          onChange={(e) => setTechnologies(e.target.value)} 
+          className="w-full p-3 rounded bg-gray-800 text-white mb-6 border border-gray-700 focus:border-indigo-500 focus:outline-none transition"
+          disabled={isLoading}
+          placeholder="React, TypeScript, Tailwind CSS"
+        />
 
         <div className="flex items-center justify-end gap-3">
-          <button onClick={onClose} className="px-4 py-2 bg-gray-700 rounded">Cancel</button>
-          <button onClick={handleCreate} className="px-4 py-2 bg-indigo-600 rounded">Create</button>
+          <button 
+            onClick={onClose} 
+            disabled={isLoading}
+            className="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded transition disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Cancel
+          </button>
+          <button 
+            onClick={handleCreate} 
+            disabled={isLoading || !title.trim()}
+            className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            {isLoading ? (
+              <>
+                <span className="animate-spin">⏳</span>
+                Creating...
+              </>
+            ) : (
+              'Create'
+            )}
+          </button>
         </div>
       </div>
     </div>

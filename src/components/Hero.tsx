@@ -1,6 +1,7 @@
 'use client'
 
 import { PortfolioData } from '@/data/portfolio'
+import { sanitizeString } from '@/lib/validation'
 
 interface HeroProps {
   data: PortfolioData
@@ -11,7 +12,9 @@ interface HeroProps {
 export default function Hero({ data, isEditMode, onDataChange }: HeroProps) {
   const handleChange = (field: string, value: string) => {
     if (onDataChange) {
-      onDataChange({ ...data, [field]: value })
+      // Sanitize input to prevent XSS
+      const sanitized = sanitizeString(value, field === 'name' ? 100 : 500)
+      onDataChange({ ...data, [field]: sanitized })
     }
   }
 
@@ -29,6 +32,8 @@ export default function Hero({ data, isEditMode, onDataChange }: HeroProps) {
                     value={data.name}
                     onChange={(e) => handleChange('name', e.target.value)}
                     className="w-full text-5xl md:text-6xl font-bold text-white bg-gray-800 border-2 border-indigo-500 rounded-lg p-3 mb-2"
+                    placeholder="Your name"
+                    maxLength={100}
                   />
                 </div>
                 <div className="mb-6">
@@ -38,6 +43,8 @@ export default function Hero({ data, isEditMode, onDataChange }: HeroProps) {
                     value={data.title}
                     onChange={(e) => handleChange('title', e.target.value)}
                     className="w-full text-2xl md:text-3xl text-indigo-300 bg-gray-800 border-2 border-indigo-500 rounded-lg p-3 font-semibold"
+                    placeholder="Your professional title"
+                    maxLength={200}
                   />
                 </div>
                 <div className="mb-8">
@@ -47,7 +54,10 @@ export default function Hero({ data, isEditMode, onDataChange }: HeroProps) {
                     onChange={(e) => handleChange('bio', e.target.value)}
                     className="w-full text-lg text-gray-300 bg-gray-800 border-2 border-indigo-500 rounded-lg p-3 leading-relaxed max-w-lg"
                     rows={4}
+                    placeholder="Tell your story"
+                    maxLength={500}
                   />
+                  <p className="text-xs text-gray-500 mt-1">{data.bio.length}/500</p>
                 </div>
               </>
             ) : (

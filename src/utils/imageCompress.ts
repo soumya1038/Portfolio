@@ -59,7 +59,7 @@ export async function compressImage(
 }
 
 /**
- * Fetch GitHub repository details
+ * Fetch GitHub repository details with rate limit handling
  * @param repoUrl GitHub repository URL (e.g., https://github.com/username/repo)
  * @returns Promise with repo details
  */
@@ -67,7 +67,7 @@ export async function fetchGitHubRepo(repoUrl: string) {
   try {
     // Extract owner and repo from URL
     const match = repoUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/)
-    if (!match) throw new Error('Invalid GitHub URL')
+    if (!match) throw new Error('Invalid GitHub URL format. Use: https://github.com/username/repo')
 
     const [, owner, repo] = match
     const apiUrl = `https://api.github.com/repos/${owner}/${repo}`
@@ -77,23 +77,42 @@ export async function fetchGitHubRepo(repoUrl: string) {
         'Accept': 'application/vnd.github.v3+json',
       },
     })
-    if (!response.ok) throw new Error('Repository not found')
+    
+    // Handle rate limiting
+    if (response.status === 403) {
+      const remaining = response.headers.get('x-ratelimit-remaining')
+      throw new Error('GitHub API rate limit exceeded. Please try again later or use a GitHub token.')
+    }
+    
+    if (!response.ok) {
+      if (response.status === 404) {
+        throw new Error('Repository not found. Check the URL and try again.')
+      }
+      throw new Error(`Failed to fetch repository: ${response.statusText}`)
+    }
 
     const data = await response.json()
+
+    // Validate response structure
+    if (!data.name || typeof data.name !== 'string') {
+      throw new Error('Invalid repository data received')
+    }
 
     // Collect technologies from primary language and topics
     const techs: string[] = []
     if (data.language) techs.push(data.language)
-    if (Array.isArray(data.topics)) techs.push(...data.topics)
+    if (Array.isArray(data.topics) && data.topics.length > 0) {
+      techs.push(...data.topics.slice(0, 5)) // Limit to 5 topics
+    }
 
     return {
       title: data.name || repo,
-      description: data.description || `Repository: ${repo}. Created by ${owner}.`,
+      description: data.description || `Repository by ${owner}`,
       link: data.html_url || repoUrl,
-      technologies: techs,
+      technologies: techs.length > 0 ? techs : ['Repository'],
     }
   } catch (error) {
-    console.error('Error fetching GitHub repo:', error)
-    throw error
+    const message = error instanceof Error ? error.message : 'Failed to import repository'
+    throw new Error(message)
   }
 }
