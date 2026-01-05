@@ -144,22 +144,26 @@ export default function Home() {
         <EditToolbar onSave={handleSave} onCancel={handleCancel} isLoading={isLoading} />
       )}
       {!isAdmin && <AdminAuth onLogin={handleAdminLogin} />}
-      <Hero
-        data={displayData}
-        isEditMode={isEditMode}
-        onDataChange={handleEditChange}
-      />
-      <About
-        data={displayData}
-        isEditMode={isEditMode}
-        onDataChange={handleEditChange}
-      />
-      <Projects data={displayData} isEditMode={isEditMode} onDataChange={handleEditChange} />
-      <Skills
-        data={displayData}
-        isEditMode={isEditMode}
-        onDataChange={handleEditChange}
-      />
+      {displayData && (
+        <>
+          <Hero
+            data={displayData}
+            isEditMode={isEditMode}
+            onDataChange={handleEditChange}
+          />
+          <About
+            data={displayData}
+            isEditMode={isEditMode}
+            onDataChange={handleEditChange}
+          />
+          <Projects data={displayData} isEditMode={isEditMode} onDataChange={handleEditChange} />
+          <Skills
+            data={displayData}
+            isEditMode={isEditMode}
+            onDataChange={handleEditChange}
+          />
+        </>
+      )}
       <Contact data={displayData} />
       <Footer data={displayData} />
 
