@@ -60,75 +60,117 @@ export default function Skills({ data, isEditMode, onDataChange }: SkillsProps) 
   }
 
   return (
-    <section id="skills" className="section bg-white">
+    <section id="skills" className="section section-dark">
       <div className="container-custom">
-        <h2 className="heading text-gray-900 text-center mb-16">My Skills</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div className="mb-16 space-y-4 animate-fade-in-up">
+          <h2 className="heading text-white text-center">My Skills</h2>
+          <p className="text-center text-gray-400 max-w-2xl mx-auto">
+            Technologies and tools I&apos;ve mastered over my development journey
+          </p>
+        </div>
+
+        {/* Skills Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-12">
           {data.skills.map((skill, idx) => (
-            <div
-              key={idx}
-              className={`bg-gradient-to-br from-indigo-50 to-pink-50 p-6 rounded-xl text-center hover:shadow-lg transition-all duration-300 ${
-                isEditMode ? 'hover:scale-105' : 'hover:scale-105'
-              }`}
-            >
+            <div key={idx} className="group">
               {isEditMode ? (
-                <div className="space-y-2">
+                <div className="card space-y-2">
                   <input
                     type="text"
                     value={skill}
                     onChange={(e) => handleSkillChange(idx, e.target.value)}
-                    className="w-full text-lg font-bold text-gray-900 bg-white border-2 border-indigo-500 rounded-lg p-2"
+                    className="w-full text-sm font-bold text-white bg-gray-700 border-2 border-indigo-500 rounded-lg p-2"
                   />
                   <button
                     onClick={() => handleRemoveSkill(idx)}
-                    className="w-full bg-red-500 hover:bg-red-600 text-white text-sm font-bold py-1 px-2 rounded transition"
+                    className="w-full bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-bold py-1 px-2 rounded transition"
                   >
                     Remove
                   </button>
                 </div>
               ) : (
-                <p className="text-lg font-bold text-gray-900">{skill}</p>
+                <div className="card text-center h-full flex items-center justify-center min-h-24">
+                  <p className="font-semibold text-white group-hover:text-cyan-400 transition-colors">
+                    {skill}
+                  </p>
+                </div>
               )}
             </div>
           ))}
         </div>
+
+        {/* Add Skill Button */}
         {isEditMode && (
-          <div className="mt-8 text-center">
+          <div className="flex justify-center mb-12">
             <button
               onClick={handleAddSkill}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg transition"
+              className="btn-primary flex items-center gap-2"
             >
-              + Add Skill
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Skill
             </button>
           </div>
         )}
 
-
+        {/* Custom Sections */}
+        {data.customSections && data.customSections.length > 0 && (
+          <div className="mt-16 space-y-8">
+            {data.customSections.map((section, idx) => (
+              <div 
+                key={section.id} 
+                className="card animate-fade-in-up"
+                style={{ animationDelay: `${idx * 0.1}s` }}
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <h3 className="text-2xl font-bold text-white">{section.title}</h3>
+                  {isEditMode && (
+                    <button
+                      onClick={() => handleRemoveCustomSection(section.id)}
+                      className="text-red-400 hover:text-red-300 transition"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+                <div className="text-gray-400 leading-relaxed space-y-2">
+                  {section.content.split('\n').map((paragraph, index) => (
+                    <p key={index}>{paragraph}</p>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Add Custom Section Button */}
         {isEditMode && (
           <div className="mt-12 text-center">
             <button
               onClick={() => setShowCustomSectionForm(true)}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-6 py-3 rounded-lg font-medium"
+              className="btn-secondary flex items-center gap-2 mx-auto"
             >
-              + Add Custom Section
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              Add Custom Section
             </button>
           </div>
         )}
 
         {/* New Custom Section Form */}
         {showCustomSectionForm && (
-          <div className="mt-6 max-w-2xl mx-auto">
-            <div className="bg-gray-800 rounded-lg p-6 space-y-4">
+          <div className="mt-8 max-w-2xl mx-auto">
+            <div className="card space-y-4 border-indigo-500">
               <div className="flex justify-between items-center">
-                <h4 className="text-white font-medium">New Custom Section</h4>
+                <h4 className="text-lg font-semibold text-white">New Custom Section</h4>
                 <button
                   onClick={() => {
                     setShowCustomSectionForm(false)
                     setNewSection({ title: '', content: '' })
                   }}
-                  className="text-red-400 hover:text-red-300"
+                  className="text-gray-400 hover:text-white transition"
                 >
                   ✕
                 </button>
@@ -139,7 +181,7 @@ export default function Skills({ data, isEditMode, onDataChange }: SkillsProps) 
                 placeholder="Section Title"
                 value={newSection.title}
                 onChange={(e) => setNewSection({ ...newSection, title: e.target.value })}
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               />
               
               <textarea
@@ -147,13 +189,13 @@ export default function Skills({ data, isEditMode, onDataChange }: SkillsProps) 
                 value={newSection.content}
                 onChange={(e) => setNewSection({ ...newSection, content: e.target.value })}
                 rows={4}
-                className="w-full px-4 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                className="w-full px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
               />
               
               <div className="flex gap-2">
                 <button
                   onClick={handleAddCustomSection}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-medium"
+                  className="btn-primary flex-1"
                 >
                   Save
                 </button>
@@ -162,40 +204,12 @@ export default function Skills({ data, isEditMode, onDataChange }: SkillsProps) 
                     setShowCustomSectionForm(false)
                     setNewSection({ title: '', content: '' })
                   }}
-                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg font-medium"
+                  className="btn-secondary flex-1"
                 >
                   Cancel
                 </button>
               </div>
             </div>
-          </div>
-        )}
-
-        {/* Display Custom Sections */}
-        {data.customSections && data.customSections.length > 0 && (
-          <div className="mt-12 space-y-8">
-            {data.customSections.map((section) => (
-              <div key={section.id} className="bg-gray-50 rounded-lg p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <h3 className="text-xl font-bold text-gray-900">{section.title}</h3>
-                  {isEditMode && (
-                    <button
-                      onClick={() => handleRemoveCustomSection(section.id)}
-                      className="text-red-500 hover:text-red-700"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-                <div className="text-gray-600 leading-relaxed">
-                  {section.content.split('\n').map((paragraph, index) => (
-                    <p key={index} className="mb-2">
-                      {paragraph}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            ))}
           </div>
         )}
       </div>

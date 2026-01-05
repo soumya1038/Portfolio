@@ -16,19 +16,20 @@ export default function About({ data, isEditMode, onDataChange }: AboutProps) {
   }
 
   return (
-    <section id="about" className="section bg-white">
+    <section id="about" className="section section-dark">
       <div className="container-custom">
-        <div className="max-w-3xl">
-          <h2 className="heading text-gray-900">About Me</h2>
+        <div className="max-w-3xl space-y-6 animate-fade-in-up">
+          <h2 className="heading text-white">About Me</h2>
           {isEditMode ? (
             <textarea
               value={data.bio}
               onChange={(e) => handleChange('bio', e.target.value)}
-              className="w-full text-xl text-gray-700 bg-gray-100 border-2 border-indigo-500 rounded-lg p-3 leading-relaxed mb-8"
+              className="w-full text-lg text-gray-300 bg-gray-800 border-2 border-indigo-500 rounded-lg p-4 leading-relaxed"
               rows={4}
+              placeholder="Tell your story..."
             />
           ) : (
-            <p className="text-xl text-gray-700 leading-relaxed mb-8">{data.bio}</p>
+            <p className="text-lg text-gray-300 leading-relaxed">{data.bio}</p>
           )}
         </div>
       </div>
