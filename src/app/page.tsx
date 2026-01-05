@@ -20,7 +20,7 @@ export default function Home() {
   const [editData, setEditData] = useState<PortfolioData | null>(null)
   const [isAdmin, setIsAdmin] = useState(false)
   const [isEditMode, setIsEditMode] = useState(false)
-  const [toast, setToast] = useState({ message: '', type: 'info' as const })
+  const [toast, setToast] = useState({ message: '', type: 'info' as 'success' | 'error' | 'info' | 'warning' })
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
