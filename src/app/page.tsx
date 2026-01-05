@@ -162,10 +162,10 @@ export default function Home() {
             isEditMode={isEditMode}
             onDataChange={handleEditChange}
           />
+          <Contact data={displayData} />
+          <Footer data={displayData} />
         </>
       )}
-      <Contact data={displayData} />
-      <Footer data={displayData} />
 
       {isAdmin && !isEditMode && (
         <button

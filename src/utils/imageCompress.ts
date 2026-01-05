@@ -80,7 +80,6 @@ export async function fetchGitHubRepo(repoUrl: string) {
     
     // Handle rate limiting
     if (response.status === 403) {
-      const remaining = response.headers.get('x-ratelimit-remaining')
       throw new Error('GitHub API rate limit exceeded. Please try again later or use a GitHub token.')
     }
     

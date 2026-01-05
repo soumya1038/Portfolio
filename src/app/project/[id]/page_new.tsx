@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { portfolioData, PortfolioData, Project, CustomSection } from '@/data/portfolio'
+import { portfolioData, Project, CustomSection } from '@/data/portfolio'
 import { compressImage } from '@/utils/imageCompress'
 
 export default function ProjectPage({ params }: { params: { id: string } }) {
@@ -286,7 +286,7 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
         {(editProject?.sections && editProject.sections.length > 0) && (
           <section className="mb-12">
             <div className="space-y-6">
-              {editProject.sections.map((section, idx) => (
+              {editProject.sections.map((section) => (
                 <div
                   key={section.id}
                   draggable={isEditMode}

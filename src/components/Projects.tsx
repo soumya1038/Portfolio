@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState, useCallback } from 'react'
+import { useState, useCallback } from 'react'
 import { PortfolioData, Project } from '@/data/portfolio'
 import { logger } from '@/lib/logger'
 import CreateProjectModal from './CreateProjectModal'
@@ -15,15 +15,11 @@ interface ProjectsProps {
 
 export default function Projects({ data, isEditMode, onDataChange }: ProjectsProps) {
   const router = useRouter()
-  const [isAdmin, setIsAdmin] = useState(false)
   const [modalOpen, setModalOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const token = localStorage.getItem('admin_token')
-    setIsAdmin(!!token)
-  }, [])
+
 
   const handleCreate = useCallback(
     async (project: Project) => {
