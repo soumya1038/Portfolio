@@ -1,0 +1,14 @@
+{
+  "name": "p_folio",
+  "version": "1.0.0",
+  "description": "Portfolio platform with viewer and owner modes",
+  "scripts": {
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "install:all": "cd server && npm install && cd ../client && npm install",
+    "build": "cd client && npm run build"
+  },
+  "keywords": ["portfolio", "react", "express", "mongodb"],
+  "author": "",
+  "license": "MIT"
+}
