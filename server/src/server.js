@@ -13,6 +13,9 @@ dotenv.config();
 
 const app = express();
 
+// Trust proxy for Render/Railway/Heroku
+app.set('trust proxy', 1);
+
 connectDB();
 
 // Security middleware
