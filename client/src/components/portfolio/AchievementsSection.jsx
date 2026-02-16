@@ -76,7 +76,7 @@ function AchievementsSection({ achievements }) {
           return next;
         });
       },
-      { threshold: 0.35 }
+      { threshold: 0.12, rootMargin: '0px 0px -12% 0px' }
     );
 
     itemRefs.current.forEach((item) => {
@@ -85,6 +85,20 @@ function AchievementsSection({ achievements }) {
 
     return () => observer.disconnect();
   }, [timeline.length]);
+
+  useEffect(() => {
+    if (!timeline.length) return undefined;
+    const fallbackTimer = window.setTimeout(() => {
+      setVisibleItems((prev) => {
+        if (prev.size > 0) return prev;
+        const next = new Set();
+        timeline.forEach((_, index) => next.add(index));
+        return next;
+      });
+    }, 1200);
+
+    return () => window.clearTimeout(fallbackTimer);
+  }, [timeline]);
 
   useEffect(() => {
     if (!activeImage) return undefined;

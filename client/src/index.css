@@ -517,9 +517,9 @@
   }
 
   .theme-dark .project-card__badge {
-    background: rgba(34, 211, 238, 0.22);
-    color: #e0f2fe;
-    border-color: rgba(34, 211, 238, 0.38);
+    background: rgba(103, 232, 249, 0.88);
+    color: #083344;
+    border-color: rgba(255, 255, 255, 0.46);
     box-shadow: 0 6px 16px rgba(14, 116, 144, 0.36);
   }
 

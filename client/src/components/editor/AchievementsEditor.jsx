@@ -6,6 +6,7 @@ import ImageUploader from './ImageUploader';
 import { achievementService } from '../../services/achievement.service';
 import { uploadService } from '../../services/upload.service';
 import { getMarkdownPreview } from '../../utils/markdown';
+import MarkdownContent from '../common/MarkdownContent';
 
 const emptyAchievement = {
   title: '',
@@ -19,15 +20,13 @@ const emptyAchievement = {
 function AchievementsEditor({ achievements: incomingAchievements = [] }) {
   const queryClient = useQueryClient();
   const formRef = useRef(null);
-  const [achievements, setAchievements] = useState(incomingAchievements || []);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState(emptyAchievement);
   const [editingId, setEditingId] = useState(null);
+  const [viewingAchievementId, setViewingAchievementId] = useState(null);
   const [isUploadingImages, setIsUploadingImages] = useState(false);
 
-  useEffect(() => {
-    setAchievements(incomingAchievements || []);
-  }, [incomingAchievements]);
+  const achievements = incomingAchievements || [];
 
   const sortedAchievements = useMemo(() => {
     return [...(achievements || [])].sort((a, b) => {
@@ -36,6 +35,22 @@ function AchievementsEditor({ achievements: incomingAchievements = [] }) {
       return bTime - aTime;
     });
   }, [achievements]);
+
+  const viewingAchievement = useMemo(
+    () =>
+      sortedAchievements.find((achievement) => achievement._id === viewingAchievementId) || null,
+    [sortedAchievements, viewingAchievementId]
+  );
+
+  useEffect(() => {
+    if (!viewingAchievementId) return;
+    const stillExists = sortedAchievements.some(
+      (achievement) => achievement._id === viewingAchievementId
+    );
+    if (!stillExists) {
+      setViewingAchievementId(null);
+    }
+  }, [sortedAchievements, viewingAchievementId]);
 
   const createMutation = useMutation({
     mutationFn: achievementService.createAchievement,
@@ -119,12 +134,13 @@ function AchievementsEditor({ achievements: incomingAchievements = [] }) {
       const { imageUrl, publicId } = await uploadAchievementImage(payload.imageUrl);
       uploadedPublicId = publicId;
       const resolved = { ...payload, imageUrl };
+      let response;
       if (editingId) {
-        await updateMutation.mutateAsync({ id: editingId, data: resolved });
+        response = await updateMutation.mutateAsync({ id: editingId, data: resolved });
       } else {
-        await createMutation.mutateAsync(resolved);
+        response = await createMutation.mutateAsync(resolved);
       }
-      return true;
+      return response?.data || null;
     } catch (error) {
       if (uploadedPublicId) {
         try {
@@ -134,7 +150,7 @@ function AchievementsEditor({ achievements: incomingAchievements = [] }) {
         }
       }
       toast.error(error.message || 'Failed to save achievement');
-      return false;
+      return null;
     } finally {
       setIsUploadingImages(false);
     }
@@ -152,17 +168,19 @@ function AchievementsEditor({ achievements: incomingAchievements = [] }) {
       date: formData.date || null,
     };
 
-    const didSave = await persistAchievement(payload);
-    if (didSave) {
+    const savedAchievement = await persistAchievement(payload);
+    if (savedAchievement) {
       setFormData(emptyAchievement);
       setEditingId(null);
       setShowForm(false);
+      setViewingAchievementId(savedAchievement._id || null);
     }
   };
 
   const handleEdit = (achievement) => {
     setEditingId(achievement._id);
     setShowForm(true);
+    setViewingAchievementId(null);
     setFormData({
       title: achievement.title || '',
       issuer: achievement.issuer || '',
@@ -181,12 +199,16 @@ function AchievementsEditor({ achievements: incomingAchievements = [] }) {
     const confirmed = window.confirm('Are you sure you want to delete this achievement?');
     if (!confirmed) return;
     await deleteMutation.mutateAsync(achievement._id);
+    if (viewingAchievementId === achievement._id) {
+      setViewingAchievementId(null);
+    }
   };
 
   const handleCancel = () => {
     setEditingId(null);
     setFormData(emptyAchievement);
     setShowForm(false);
+    setViewingAchievementId(null);
   };
 
   return (
@@ -199,12 +221,22 @@ function AchievementsEditor({ achievements: incomingAchievements = [] }) {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h3 className="text-lg font-semibold text-ink">
-          {editingId ? 'Edit Achievement' : 'Create Achievement'}
+          {showForm
+            ? editingId
+              ? 'Edit Achievement'
+              : 'Create Achievement'
+            : viewingAchievement
+              ? 'Achievement Details'
+              : 'Existing Achievements'}
         </h3>
-        {!showForm && (
+        {!showForm && !viewingAchievement && (
           <button
             type="button"
-            onClick={() => setShowForm(true)}
+            onClick={() => {
+              setEditingId(null);
+              setFormData(emptyAchievement);
+              setShowForm(true);
+            }}
             className="btn-primary flex items-center gap-2"
           >
             <FiPlus className="h-4 w-4" />
@@ -303,93 +335,189 @@ function AchievementsEditor({ achievements: incomingAchievements = [] }) {
       </form>
       )}
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-ink">Existing Achievements</h3>
-          <span className="text-xs uppercase tracking-[0.2em] text-gray-400">
-            {achievements.length} total
-          </span>
-        </div>
-        {achievements.length === 0 ? (
-          <div className="text-center py-10 border border-dashed border-primary-200 rounded-2xl bg-white/70">
-            <FiStar className="h-10 w-10 text-gray-400 mx-auto mb-3" />
-            <p className="text-gray-600">No achievements yet. Add your first certificate.</p>
-          </div>
-        ) : (
-          sortedAchievements.map((achievement) => {
-            const key = achievement._id || achievement.title;
-            return (
-              <div
-                key={key}
-                className="border border-white/70 bg-white/80 rounded-2xl p-4 hover:border-primary-200 hover:-translate-y-0.5 hover:shadow-glow transition-all"
+      {viewingAchievement && !showForm && (
+        <div className="border border-white/70 bg-white/80 rounded-2xl p-5 sm:p-6">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <h3 className="text-xl sm:text-2xl font-bold text-ink">{viewingAchievement.title}</h3>
+                {viewingAchievement.issuer && (
+                  <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                    {viewingAchievement.issuer}
+                  </span>
+                )}
+                {viewingAchievement.date && (
+                  <span className="px-2 py-0.5 bg-primary-50 text-primary-700 text-xs rounded-full">
+                    {new Date(viewingAchievement.date).toLocaleDateString()}
+                  </span>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => handleEdit(viewingAchievement)}
+                className="btn-secondary flex items-center gap-2 text-sm"
               >
-                <div className="flex flex-col lg:flex-row lg:items-start gap-4">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="font-semibold text-ink">{achievement.title}</h3>
-                      {achievement.issuer && (
-                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
-                          {achievement.issuer}
-                        </span>
+                <FiEdit2 className="h-4 w-4" />
+                Edit
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDelete(viewingAchievement)}
+                className="btn-danger flex items-center gap-2 text-sm"
+              >
+                <FiTrash2 className="h-4 w-4" />
+                Delete
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewingAchievementId(null)}
+                className="btn-secondary flex items-center gap-2 text-sm"
+              >
+                <FiX className="h-4 w-4" />
+                Close
+              </button>
+            </div>
+          </div>
+
+          <div
+            className={`mt-5 grid gap-5 ${
+              viewingAchievement.imageUrl ? 'lg:grid-cols-[minmax(0,1fr)_220px] lg:items-start' : ''
+            }`}
+          >
+            <div>
+              {viewingAchievement.description ? (
+                <MarkdownContent
+                  content={viewingAchievement.description}
+                  className="text-sm md:text-base"
+                />
+              ) : (
+                <p className="text-sm text-gray-500">No description added for this achievement.</p>
+              )}
+
+              {viewingAchievement.credentialUrl && (
+                <a
+                  href={viewingAchievement.credentialUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700 mt-4"
+                >
+                  View Credential
+                  <FiExternalLink className="h-4 w-4" />
+                </a>
+              )}
+            </div>
+
+            {viewingAchievement.imageUrl && (
+              <div className="rounded-2xl overflow-hidden border border-line">
+                <img
+                  src={viewingAchievement.imageUrl}
+                  alt={viewingAchievement.title}
+                  className="w-full h-56 object-cover"
+                />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!showForm && !viewingAchievement && (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs uppercase tracking-[0.2em] text-gray-400">
+              {achievements.length} total
+            </span>
+          </div>
+          {achievements.length === 0 ? (
+            <div className="text-center py-10 border border-dashed border-primary-200 rounded-2xl bg-white/70">
+              <FiStar className="h-10 w-10 text-gray-400 mx-auto mb-3" />
+              <p className="text-gray-600">No achievements yet. Add your first certificate.</p>
+            </div>
+          ) : (
+            sortedAchievements.map((achievement) => {
+              const key = achievement._id || achievement.title;
+              return (
+                <div
+                  key={key}
+                  onClick={() => setViewingAchievementId(achievement._id)}
+                  className="border border-white/70 bg-white/80 rounded-2xl p-4 hover:border-primary-200 hover:-translate-y-0.5 hover:shadow-glow transition-all cursor-pointer"
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-start gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <h3 className="font-semibold text-ink">{achievement.title}</h3>
+                        {achievement.issuer && (
+                          <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
+                            {achievement.issuer}
+                          </span>
+                        )}
+                        {achievement.date && (
+                          <span className="px-2 py-0.5 bg-primary-50 text-primary-700 text-xs rounded-full">
+                            {new Date(achievement.date).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                      {achievement.description && (
+                        <p className="text-sm text-gray-600 mt-2 line-clamp-2">
+                          {getMarkdownPreview(achievement.description, 150)}
+                        </p>
                       )}
-                      {achievement.date && (
-                        <span className="px-2 py-0.5 bg-primary-50 text-primary-700 text-xs rounded-full">
-                          {new Date(achievement.date).toLocaleDateString()}
-                        </span>
+                      {achievement.credentialUrl && (
+                        <a
+                          href={achievement.credentialUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(event) => event.stopPropagation()}
+                          className="inline-flex items-center gap-2 text-xs font-semibold text-primary-700 mt-3"
+                        >
+                          View Credential
+                          <FiExternalLink className="h-3.5 w-3.5" />
+                        </a>
                       )}
                     </div>
-                    {achievement.description && (
-                      <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-                        {getMarkdownPreview(achievement.description, 150)}
-                      </p>
+
+                    {achievement.imageUrl && (
+                      <div className="w-full lg:w-44 h-28 rounded-2xl overflow-hidden border border-line flex-shrink-0">
+                        <img
+                          src={achievement.imageUrl}
+                          alt={achievement.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
                     )}
-                    {achievement.credentialUrl && (
-                      <a
-                        href={achievement.credentialUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 text-xs font-semibold text-primary-700 mt-3"
+
+                    <div className="flex gap-2 lg:flex-col lg:items-end">
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleEdit(achievement);
+                        }}
+                        className="p-2 text-gray-500 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors"
+                        title="Edit"
                       >
-                        View Credential
-                        <FiExternalLink className="h-3.5 w-3.5" />
-                      </a>
-                    )}
-                  </div>
-
-                  {achievement.imageUrl && (
-                    <div className="w-full lg:w-44 h-28 rounded-2xl overflow-hidden border border-line flex-shrink-0">
-                      <img
-                        src={achievement.imageUrl}
-                        alt={achievement.title}
-                        className="w-full h-full object-cover"
-                      />
+                        <FiEdit2 className="h-4 w-4" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleDelete(achievement);
+                        }}
+                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title="Delete"
+                      >
+                        <FiTrash2 className="h-4 w-4" />
+                      </button>
                     </div>
-                  )}
-
-                  <div className="flex gap-2 lg:flex-col lg:items-end">
-                    <button
-                      type="button"
-                      onClick={() => handleEdit(achievement)}
-                      className="p-2 text-gray-500 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors"
-                      title="Edit"
-                    >
-                      <FiEdit2 className="h-4 w-4" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(achievement)}
-                      className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Delete"
-                    >
-                      <FiTrash2 className="h-4 w-4" />
-                    </button>
                   </div>
                 </div>
-              </div>
-            );
-          })
-        )}
-      </div>
+              );
+            })
+          )}
+        </div>
+      )}
     </div>
   );
 }
