@@ -15,6 +15,7 @@ import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import Loading from '../../components/common/Loading';
 import DemoVideoPlayer from '../../components/common/DemoVideoPlayer';
+import MarkdownContent from '../../components/common/MarkdownContent';
 import { projectService } from '../../services/project.service';
 
 const galleryCardClass =
@@ -170,9 +171,10 @@ function ProjectDetail() {
                   )}
                 </div>
                 <h1 className="text-3xl md:text-4xl font-bold text-ink">{project.title}</h1>
-                <p className="text-gray-600 mt-3 leading-relaxed">
-                  {project.description || 'A focused build crafted for performance, clarity, and impact.'}
-                </p>
+                <MarkdownContent
+                  content={project.description || 'A focused build crafted for performance, clarity, and impact.'}
+                  className="mt-3"
+                />
 
                 {project.techStack?.length > 0 && (
                   <div className="mt-5">

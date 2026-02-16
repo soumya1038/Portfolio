@@ -58,8 +58,8 @@ export const validateProject = [
   body('description')
     .optional()
     .trim()
-    .isLength({ max: 2000 })
-    .withMessage('Description must be 2000 characters or less'),
+    .isLength({ max: 20000 })
+    .withMessage('Description must be 20000 characters or less'),
   body('techStack')
     .optional()
     .isArray()
@@ -94,8 +94,8 @@ export const validateAchievement = [
   body('description')
     .optional()
     .trim()
-    .isLength({ max: 1000 })
-    .withMessage('Description must be 1000 characters or less'),
+    .isLength({ max: 20000 })
+    .withMessage('Description must be 20000 characters or less'),
   body('credentialUrl')
     .optional({ checkFalsy: true })
     .isURL({ require_protocol: true })

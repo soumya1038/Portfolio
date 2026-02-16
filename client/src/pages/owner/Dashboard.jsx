@@ -11,6 +11,7 @@ import ProjectDetails from '../../components/editor/ProjectDetails';
 import { portfolioService } from '../../services/portfolio.service';
 import { projectService } from '../../services/project.service';
 import { achievementService } from '../../services/achievement.service';
+import { getMarkdownPreview } from '../../utils/markdown';
 
 function Dashboard() {
   const [activeTab, setActiveTab] = useState('profile');
@@ -275,7 +276,7 @@ function Dashboard() {
                               )}
                             </div>
                             <p className="text-sm text-gray-500 line-clamp-2 mb-2">
-                              {project.description || 'No description'}
+                              {getMarkdownPreview(project.description, 180) || 'No description'}
                             </p>
                             {project.techStack?.length > 0 && (
                               <div className="flex flex-wrap gap-1">

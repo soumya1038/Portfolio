@@ -168,10 +168,10 @@ function Portfolio() {
                   <button
                     key={tech}
                     onClick={() => setActiveTech(tech)}
-                    className={`px-3 py-1 text-xs font-semibold rounded-full border transition-colors ${
+                    className={`project-filter-chip ${
                       activeTech === tech
-                        ? 'bg-primary-600 text-white border-primary-600'
-                        : 'bg-white text-gray-600 border-line hover:border-primary-200'
+                        ? 'project-filter-chip--active'
+                        : 'project-filter-chip--idle'
                     }`}
                   >
                     {tech}
@@ -191,13 +191,13 @@ function Portfolio() {
           )}
           {/* Featured Projects Section */}
           {featuredProjects.length > 0 && (
-            <section className="py-16 bg-white">
-              <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="featured-projects-section relative py-20 overflow-hidden">
+              <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
                   <div>
-                    <p className="section-kicker">Showcase</p>
-                    <h2 className="section-title mt-2">Featured Builds</h2>
-                    <p className="text-gray-600 mt-3 max-w-2xl">
+                    <p className="section-kicker featured-projects-kicker">Showcase</p>
+                    <h2 className="section-title mt-2 featured-projects-title">Featured Builds</h2>
+                    <p className="featured-projects-subtitle mt-3 max-w-2xl">
                       A curated set of projects highlighting depth, polish, and measurable impact.
                     </p>
                   </div>

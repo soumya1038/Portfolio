@@ -348,10 +348,13 @@ function ProjectEditor({ project, onClose }) {
               name="description"
               value={formData.description}
               onChange={handleChange}
-              rows={4}
+              rows={8}
               className="input-field"
-              placeholder="Describe your project..."
+              placeholder="Supports Markdown: headings, lists, links, code blocks, and more..."
             />
+            <p className="text-xs text-gray-500 mt-2">
+              GitHub-flavored Markdown is supported and will be rendered in project details.
+            </p>
           </div>
 
           <div>

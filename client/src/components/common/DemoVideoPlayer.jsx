@@ -13,9 +13,9 @@ function DemoVideoPlayer({ videoUrl, title = 'Demo video', heightClass = 'h-56 m
 
   if (videoMeta.type === 'unknown') {
     return (
-      <div className="rounded-2xl border border-dashed border-line p-4 text-sm text-gray-600 bg-white/80 shadow-soft">
-        <p className="font-semibold text-ink mb-2">Demo Video</p>
-        <p className="text-gray-600">Inline preview supports Google Drive and YouTube links.</p>
+      <div className="demo-video-fallback rounded-2xl border border-dashed border-line p-4 text-sm shadow-soft">
+        <p className="demo-video-fallback__title font-semibold mb-2">Demo Video</p>
+        <p className="demo-video-fallback__desc">Inline preview supports Google Drive and YouTube links.</p>
         {videoUrl && (
           <a
             href={videoUrl}
@@ -44,7 +44,7 @@ function DemoVideoPlayer({ videoUrl, title = 'Demo video', heightClass = 'h-56 m
   };
 
   const wrapperClass = showHelper ? 'space-y-3' : 'h-full';
-  const frameClass = `relative overflow-hidden rounded-2xl border border-white/80 shadow-soft bg-white/40 ${showHelper ? '' : 'h-full'}`;
+  const frameClass = `demo-video-frame relative overflow-hidden rounded-2xl border shadow-soft ${showHelper ? '' : 'h-full'}`;
 
   return (
     <div className={wrapperClass}>
@@ -65,7 +65,7 @@ function DemoVideoPlayer({ videoUrl, title = 'Demo video', heightClass = 'h-56 m
             <button
               type="button"
               onClick={handleFullscreen}
-              className="absolute bottom-3 right-3 bg-white/90 text-ink px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 shadow-soft hover:bg-white"
+              className="demo-video-action absolute bottom-3 right-3 px-3 py-1.5 rounded-full text-xs font-semibold flex items-center gap-2 shadow-soft"
             >
               <FiMaximize2 className="h-4 w-4" />
               Full screen
@@ -80,8 +80,8 @@ function DemoVideoPlayer({ videoUrl, title = 'Demo video', heightClass = 'h-56 m
           >
             <div className={`relative ${showHelper ? '' : 'h-full'}`}>
               {thumbError ? (
-                <div className={`w-full ${showHelper ? heightClass : 'h-full'} bg-gradient-to-br from-primary-100 via-white to-accent-100 flex items-center justify-center`}>
-                  <span className="text-gray-600 font-semibold">Demo preview unavailable</span>
+                <div className={`demo-video-thumb-fallback w-full ${showHelper ? heightClass : 'h-full'} flex items-center justify-center`}>
+                  <span className="demo-video-thumb-fallback__text font-semibold">Demo preview unavailable</span>
                 </div>
               ) : (
                 <img
@@ -94,7 +94,7 @@ function DemoVideoPlayer({ videoUrl, title = 'Demo video', heightClass = 'h-56 m
               )}
               <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div>
               <div className="absolute inset-0 flex items-center justify-center">
-                <span className="inline-flex items-center gap-2 px-5 py-2 bg-white/95 text-ink rounded-full text-sm font-semibold shadow-soft ring-1 ring-white/70 backdrop-blur-sm transition-transform duration-300 group-hover:scale-[1.02]">
+                <span className="demo-video-cta inline-flex items-center gap-2 px-5 py-2 rounded-full text-sm font-semibold shadow-soft ring-1 backdrop-blur-sm transition-transform duration-300 group-hover:scale-[1.02]">
                   <FiPlay className="h-4 w-4" />
                   Play Demo
                 </span>
@@ -105,7 +105,7 @@ function DemoVideoPlayer({ videoUrl, title = 'Demo video', heightClass = 'h-56 m
       </div>
 
       {showHelper && (
-        <p className="text-xs text-gray-500">
+        <p className="demo-video-helper text-xs">
           If the thumbnail does not appear, confirm the Drive link is public or the YouTube video is available.
         </p>
       )}

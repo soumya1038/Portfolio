@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { FiExternalLink } from 'react-icons/fi';
+import MarkdownContent from '../common/MarkdownContent';
 
 const glyphs = [
   (props) => (
@@ -347,9 +348,10 @@ function AchievementsSection({ achievements }) {
                             {achievement.issuer && <span>{achievement.issuer}</span>}
                           </div>
                           {achievement.description && (
-                            <p className="mt-4 text-sm md:text-base text-gray-600 leading-relaxed max-w-prose">
-                              {achievement.description}
-                            </p>
+                            <MarkdownContent
+                              content={achievement.description}
+                              className="mt-4 text-sm md:text-base max-w-prose"
+                            />
                           )}
                           {achievement.credentialUrl && (
                             <a

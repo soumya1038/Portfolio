@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { FiX, FiEdit2, FiGithub, FiExternalLink, FiStar, FiGitBranch, FiCode, FiCalendar, FiTag, FiPlay } from 'react-icons/fi';
 import DemoVideoPlayer from '../common/DemoVideoPlayer';
+import MarkdownContent from '../common/MarkdownContent';
 
 function ProjectDetails({ project, onClose, onEdit }) {
   if (!project) return null;
@@ -94,7 +95,7 @@ function ProjectDetails({ project, onClose, onEdit }) {
 
           {/* Description */}
           {project.description && (
-            <p className="text-gray-600 leading-relaxed mt-3">{project.description}</p>
+            <MarkdownContent content={project.description} className="mt-3" />
           )}
         </div>
 

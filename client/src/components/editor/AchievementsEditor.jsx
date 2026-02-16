@@ -5,6 +5,7 @@ import toast from 'react-hot-toast';
 import ImageUploader from './ImageUploader';
 import { achievementService } from '../../services/achievement.service';
 import { uploadService } from '../../services/upload.service';
+import { getMarkdownPreview } from '../../utils/markdown';
 
 const emptyAchievement = {
   title: '',
@@ -260,12 +261,15 @@ function AchievementsEditor({ achievements: incomingAchievements = [] }) {
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
           <textarea
-            rows={3}
+            rows={6}
             value={formData.description}
             onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
             className="input-field"
-            placeholder="What the certification covers..."
+            placeholder="Supports Markdown: headings, bullet points, links, code blocks..."
           />
+          <p className="text-xs text-gray-500 mt-2">
+            GitHub-flavored Markdown is supported (for example: `##`, lists, links, tables, and code blocks).
+          </p>
         </div>
 
         <div>
@@ -336,7 +340,7 @@ function AchievementsEditor({ achievements: incomingAchievements = [] }) {
                     </div>
                     {achievement.description && (
                       <p className="text-sm text-gray-600 mt-2 line-clamp-2">
-                        {achievement.description}
+                        {getMarkdownPreview(achievement.description, 150)}
                       </p>
                     )}
                     {achievement.credentialUrl && (
