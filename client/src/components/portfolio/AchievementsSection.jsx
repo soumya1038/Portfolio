@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { FiExternalLink } from 'react-icons/fi';
+import { FiExternalLink, FiFileText } from 'react-icons/fi';
 import MarkdownContent from '../common/MarkdownContent';
+import { isPdfAsset } from '../../utils/media';
 
 const glyphs = [
   (props) => (
@@ -248,9 +249,9 @@ function AchievementsSection({ achievements }) {
                 return (
                   <path
                     key={`path-${path.index}`}
+                    className="achievement-connector"
                     d={path.d}
                     fill="none"
-                    stroke="#94a3b8"
                     strokeWidth="3"
                     strokeDasharray="10 14"
                     strokeLinecap="round"
@@ -271,7 +272,8 @@ function AchievementsSection({ achievements }) {
               const isLeft = index % 2 === 0;
               const isVisible = visibleItems.has(index);
               const Glyph = glyphs[index % glyphs.length];
-              const hasImage = Boolean(achievement.imageUrl);
+              const hasMedia = Boolean(achievement.imageUrl);
+              const isPdfMedia = hasMedia && isPdfAsset(achievement.imageUrl);
               return (
                 <div
                   key={achievement._id || `${achievement.title}-${index}`}
@@ -290,7 +292,7 @@ function AchievementsSection({ achievements }) {
                       }}
                       className="relative h-20 w-20 md:h-24 md:w-24 text-primary-300 flex items-center justify-center"
                     >
-                      <div className="absolute inset-0 rounded-full border-2 border-primary-100 bg-white/70 shadow-soft" />
+                      <div className="achievement-node absolute inset-0 rounded-full border-2 bg-white/70 shadow-soft" />
                       <Glyph className="h-14 w-14 md:h-16 md:w-16 glyph-wash relative" />
                     </div>
                   </div>
@@ -352,55 +354,74 @@ function AchievementsSection({ achievements }) {
                     <div className="stone-slab p-6 md:p-8">
                       <div
                         className={`grid gap-6 ${
-                          hasImage
+                          hasMedia
                             ? 'md:grid-cols-[1fr_1.15fr] md:gap-8 lg:grid-cols-[1fr_1.25fr] md:items-start'
                             : ''
                         }`}
                       >
                         <div>
-                          <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] text-gray-500 mt-2">
+                          <div className="achievement-detail-meta flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.2em] mt-2">
                             {achievement.issuer && <span>{achievement.issuer}</span>}
                           </div>
                           {achievement.description && (
-                            <MarkdownContent
-                              content={achievement.description}
-                              className="mt-4 text-sm md:text-base max-w-prose"
-                            />
+                            <div className="achievement-description-scroll mt-4 pr-1">
+                              <MarkdownContent
+                                content={achievement.description}
+                                className="achievement-detail-copy text-sm md:text-base max-w-prose"
+                              />
+                            </div>
                           )}
                           {achievement.credentialUrl && (
                             <a
                               href={achievement.credentialUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="inline-flex items-center gap-2 text-sm font-semibold text-primary-700 mt-4"
+                              className="achievement-credential-link inline-flex items-center gap-2 text-sm font-semibold mt-4"
                             >
                               View Credential
                               <FiExternalLink className="h-4 w-4" />
                             </a>
                           )}
                         </div>
-                        {hasImage && (
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setActiveImage({
-                                url: achievement.imageUrl,
-                                title: achievement.title,
-                              })
-                            }
-                            className="group relative overflow-hidden rounded-2xl border border-line focus:outline-none focus:ring-2 focus:ring-primary-300"
-                          >
-                            <img
-                              src={achievement.imageUrl}
-                              alt={achievement.title}
-                              className="w-full aspect-[3/4] md:aspect-[3/4] lg:aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-105"
-                            />
-                            <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                              <span className="text-xs uppercase tracking-[0.3em] text-white">
-                                View
+                        {hasMedia && (
+                          isPdfMedia ? (
+                            <a
+                              href={achievement.imageUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="achievement-doc-card rounded-2xl border border-line focus:outline-none focus:ring-2 focus:ring-primary-300"
+                            >
+                              <FiFileText className="h-10 w-10" />
+                              <span className="text-xs uppercase tracking-[0.3em]">
+                                PDF
                               </span>
-                            </div>
-                          </button>
+                              <span className="text-xs font-semibold text-primary-700 mt-1">
+                                Open Certificate
+                              </span>
+                            </a>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setActiveImage({
+                                  url: achievement.imageUrl,
+                                  title: achievement.title,
+                                })
+                              }
+                              className="group relative overflow-hidden rounded-2xl border border-line focus:outline-none focus:ring-2 focus:ring-primary-300"
+                            >
+                              <img
+                                src={achievement.imageUrl}
+                                alt={achievement.title}
+                                className="w-full aspect-[3/4] md:aspect-[3/4] lg:aspect-[2/3] object-cover transition-transform duration-300 group-hover:scale-105"
+                              />
+                              <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                                <span className="text-xs uppercase tracking-[0.3em] text-white">
+                                  View
+                                </span>
+                              </div>
+                            </button>
+                          )
                         )}
                       </div>
                     </div>
@@ -443,14 +464,14 @@ function AchievementsSection({ achievements }) {
               <a
                 href={activeImage.url}
                 download
-                className="px-3 py-2 text-xs uppercase tracking-[0.3em] bg-white/90 text-ink rounded-full shadow-soft hover:bg-white"
+                className="achievement-modal-action px-3 py-2 text-xs uppercase tracking-[0.3em] rounded-full shadow-soft"
               >
                 Download
               </a>
               <button
                 type="button"
                 onClick={() => setActiveImage(null)}
-                className="px-3 py-2 text-xs uppercase tracking-[0.3em] bg-white/90 text-ink rounded-full shadow-soft hover:bg-white"
+                className="achievement-modal-action px-3 py-2 text-xs uppercase tracking-[0.3em] rounded-full shadow-soft"
               >
                 Close
               </button>

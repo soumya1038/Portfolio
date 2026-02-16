@@ -1,11 +1,13 @@
 import { useNavigate } from 'react-router-dom';
-import { FiGithub, FiExternalLink, FiStar, FiGitBranch } from 'react-icons/fi';
+import { FiGithub, FiExternalLink, FiStar, FiGitBranch, FiFileText } from 'react-icons/fi';
 import { getMarkdownPreview } from '../../utils/markdown';
+import { isPdfAsset } from '../../utils/media';
 
 function ProjectCard({ project, featured = false }) {
   const navigate = useNavigate();
   const defaultImage = 'https://via.placeholder.com/400x300/e2e8f0/64748b?text=No+Image';
   const mainImage = project.images?.[0] || defaultImage;
+  const mainImageIsPdf = isPdfAsset(mainImage);
   const hasLinks = Boolean(project.githubUrl || project.liveUrl);
   const descriptionPreview =
     getMarkdownPreview(project.description, 180) ||
@@ -28,14 +30,21 @@ function ProjectCard({ project, featured = false }) {
     >
       {/* Image */}
       <div className="relative overflow-hidden">
-        <img
-          src={mainImage}
-          alt={project.title}
-          className="w-full h-52 object-cover group-hover:scale-105 transition-transform duration-500"
-          onError={(e) => {
-            e.target.src = defaultImage;
-          }}
-        />
+        {mainImageIsPdf ? (
+          <div className="w-full h-52 bg-gradient-to-br from-primary-100 via-white to-accent-100 flex flex-col items-center justify-center gap-2">
+            <FiFileText className="h-10 w-10 text-primary-700" />
+            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-700">PDF Cover</span>
+          </div>
+        ) : (
+          <img
+            src={mainImage}
+            alt={project.title}
+            className="w-full h-52 object-cover group-hover:scale-105 transition-transform duration-500"
+            onError={(e) => {
+              e.target.src = defaultImage;
+            }}
+          />
+        )}
         <div className="project-card__image-wash absolute inset-0"></div>
         {featured && (
           <span className="project-card__badge absolute top-4 right-4 px-3 py-1 text-xs font-semibold rounded-full">

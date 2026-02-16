@@ -10,6 +10,8 @@ import {
   FiCalendar,
   FiTag,
   FiGlobe,
+  FiFileText,
+  FiDownload,
 } from 'react-icons/fi';
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
@@ -17,6 +19,7 @@ import Loading from '../../components/common/Loading';
 import DemoVideoPlayer from '../../components/common/DemoVideoPlayer';
 import MarkdownContent from '../../components/common/MarkdownContent';
 import { projectService } from '../../services/project.service';
+import { isPdfAsset } from '../../utils/media';
 
 const galleryCardClass =
   'group flex-1 min-w-[220px] sm:min-w-[240px] lg:min-w-[260px] h-36 sm:h-40 lg:h-44 overflow-hidden rounded-2xl border border-white/80 bg-white/80 shadow-soft transition-shadow duration-300 hover:shadow-glow';
@@ -95,8 +98,10 @@ function ProjectDetail() {
     );
   }
 
-  const heroImage = project.images?.[0];
-  const extraImages = project.images?.slice(1) || [];
+  const mediaAssets = project.images || [];
+  const heroMedia = mediaAssets[0];
+  const heroMediaIsPdf = isPdfAsset(heroMedia);
+  const extraMedia = mediaAssets.slice(1);
   const createdAt = project.createdAt ? new Date(project.createdAt).toLocaleDateString() : null;
   const updatedAt = project.updatedAt ? new Date(project.updatedAt).toLocaleDateString() : null;
   const demoVideos = project.demoVideos?.length
@@ -104,7 +109,7 @@ function ProjectDetail() {
     : project.demoVideoUrl
       ? [project.demoVideoUrl]
       : [];
-  const imageCount = extraImages.length;
+  const imageCount = extraMedia.length;
   const videoCount = demoVideos.length;
   const galleryItems = [
     ...demoVideos.map((videoUrl, index) => ({
@@ -116,15 +121,18 @@ function ProjectDetail() {
       imageCount,
       videoCount,
     })),
-    ...extraImages.map((imageUrl, index) => ({
-      id: `image-${index}`,
-      type: 'image',
-      url: imageUrl,
-      alt: `${project.title} ${index + 2}`,
-      imageIndex: index,
-      imageCount,
-      videoCount,
-    })),
+    ...extraMedia.map((itemUrl, index) => {
+      const isPdf = isPdfAsset(itemUrl);
+      return {
+        id: `${isPdf ? 'pdf' : 'image'}-${index}`,
+        type: isPdf ? 'pdf' : 'image',
+        url: itemUrl,
+        alt: `${project.title} ${index + 2}`,
+        imageIndex: index,
+        imageCount,
+        videoCount,
+      };
+    }),
   ];
 
   return (
@@ -143,13 +151,29 @@ function ProjectDetail() {
           <div className="mt-6 grid grid-cols-1 lg:grid-cols-[1.35fr_0.65fr] gap-8">
             <div className="space-y-6">
               <div className="overflow-hidden rounded-3xl border border-white/70 shadow-soft bg-white">
-                {heroImage ? (
-                  <img
-                    src={heroImage}
-                    alt={project.title}
-                    className="w-full h-60 sm:h-72 md:h-96 object-cover cursor-pointer"
-                    onClick={() => openLightbox(heroImage, project.title)}
-                  />
+                {heroMedia ? (
+                  heroMediaIsPdf ? (
+                    <div className="h-60 sm:h-72 md:h-96 bg-gradient-to-br from-primary-100 via-white to-accent-100 flex flex-col items-center justify-center gap-4 p-6 text-center">
+                      <FiFileText className="h-14 w-14 text-primary-700" />
+                      <p className="text-sm text-gray-600">Cover file is a PDF document.</p>
+                      <a
+                        href={heroMedia}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-secondary inline-flex items-center gap-2"
+                      >
+                        <FiExternalLink className="h-4 w-4" />
+                        Open PDF
+                      </a>
+                    </div>
+                  ) : (
+                    <img
+                      src={heroMedia}
+                      alt={project.title}
+                      className="w-full h-60 sm:h-72 md:h-96 object-cover cursor-pointer"
+                      onClick={() => openLightbox(heroMedia, project.title)}
+                    />
+                  )
                 ) : (
                   <div className="h-60 sm:h-72 md:h-96 bg-gradient-to-br from-primary-100 via-white to-accent-100 flex items-center justify-center">
                     <span className="text-gray-500 font-semibold">No preview image</span>
@@ -301,6 +325,19 @@ function ProjectDetail() {
                               showHelper={false}
                             />
                           </div>
+                        ) : item.type === 'pdf' ? (
+                          <div className="h-full w-full p-4 bg-white/80 flex flex-col items-center justify-center text-center gap-3">
+                            <FiFileText className="h-10 w-10 text-primary-700" />
+                            <a
+                              href={item.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn-secondary inline-flex items-center gap-2 text-xs"
+                            >
+                              <FiExternalLink className="h-3.5 w-3.5" />
+                              Open PDF
+                            </a>
+                          </div>
                         ) : (
                           <img
                             src={item.url}
@@ -328,13 +365,26 @@ function ProjectDetail() {
           role="dialog"
           aria-modal="true"
         >
-          <button
-            type="button"
-            onClick={closeLightbox}
-            className="absolute top-6 right-6 bg-white/90 text-ink px-4 py-2 rounded-full text-sm font-semibold shadow-soft hover:bg-white"
+          <div
+            className="absolute top-6 right-6 flex items-center gap-2"
+            onClick={(event) => event.stopPropagation()}
           >
-            Close
-          </button>
+            <a
+              href={lightbox.src}
+              download
+              className="media-lightbox-action inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold shadow-soft"
+            >
+              <FiDownload className="h-4 w-4" />
+              Download
+            </a>
+            <button
+              type="button"
+              onClick={closeLightbox}
+              className="media-lightbox-action px-4 py-2 rounded-full text-sm font-semibold shadow-soft"
+            >
+              Close
+            </button>
+          </div>
           <img
             src={lightbox.src}
             alt={lightbox.alt}

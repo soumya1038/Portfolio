@@ -10,7 +10,15 @@ export const uploadService = {
   },
 
   /**
-   * Upload image (base64 or URL)
+   * Upload media (image or PDF) using base64 data URL or direct URL
+   */
+  uploadFile: async (image) => {
+    const response = await api.post('/upload/image', { image });
+    return response.data.data;
+  },
+
+  /**
+   * Backward-compatible alias
    */
   uploadImage: async (image) => {
     const response = await api.post('/upload/image', { image });

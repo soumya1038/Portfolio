@@ -166,7 +166,7 @@ function ProjectEditor({ project, onClose }) {
   const uploadIfNeeded = async (value) => {
     if (!value) return '';
     if (isDataUrl(value)) {
-      const result = await uploadService.uploadImage(value);
+      const result = await uploadService.uploadFile(value);
       return result;
     }
     return { url: value, publicId: null };
@@ -227,7 +227,7 @@ function ProjectEditor({ project, onClose }) {
       return;
     }
 
-    // Filter out empty image URLs
+    // Filter out empty media URLs (images or PDFs)
     const cleanedImages = formData.images.filter((img) => img && img.trim());
     const cleanedVideos = (formData.demoVideos || [])
       .map((item) => (item ? item.trim() : ''))
@@ -267,7 +267,7 @@ function ProjectEditor({ project, onClose }) {
         throw error;
       }
     } catch (error) {
-      toast.error(error.message || 'Failed to upload images');
+      toast.error(error.message || 'Failed to upload files');
     } finally {
       setIsUploadingImages(false);
     }
@@ -429,13 +429,13 @@ function ProjectEditor({ project, onClose }) {
           </div>
         </div>
 
-        {/* Images */}
+        {/* Media */}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Images
+            Media (Images / PDFs)
           </label>
           <p className="text-xs text-gray-500 mb-3">
-            Drag images left or right to set the cover image (first position).
+            Drag items to reorder. The first item becomes the cover.
           </p>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {formData.images.map((img, index) => (
@@ -452,12 +452,13 @@ function ProjectEditor({ project, onClose }) {
               >
                 <div className="absolute -top-2 -left-2 bg-white text-gray-600 text-xs px-2 py-0.5 rounded-full border border-line flex items-center gap-1">
                   <FiMove className="h-3 w-3" />
-                  {index === 0 ? 'Cover' : `Image ${index + 1}`}
+                  {index === 0 ? 'Cover' : `File ${index + 1}`}
                 </div>
                 <ImageUploader
                   value={img}
                   onChange={(url) => handleImageChange(url, index)}
                   label=""
+                  allowPdf
                 />
               </div>
             ))}
@@ -467,7 +468,7 @@ function ProjectEditor({ project, onClose }) {
               className="w-32 h-32 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center text-gray-400 hover:border-primary-500 hover:text-primary-500 transition-colors"
             >
               <FiPlus className="h-8 w-8 mb-1" />
-              <span className="text-xs">Add Image</span>
+              <span className="text-xs">Add File</span>
             </button>
           </div>
         </div>
@@ -478,7 +479,7 @@ function ProjectEditor({ project, onClose }) {
             Demo Videos
           </label>
           <p className="text-xs text-gray-500 mb-4">
-            Add Google Drive or YouTube links. Drag to reorder.
+            Add Google Drive, YouTube, Vimeo, or direct MP4/WebM links. Drag to reorder.
           </p>
           <div className="space-y-4">
             {formData.demoVideos.map((video, index) => (
@@ -503,7 +504,7 @@ function ProjectEditor({ project, onClose }) {
                       type="url"
                       value={video}
                       onChange={(e) => handleVideoChange(e.target.value, index)}
-                      placeholder="https://drive.google.com/file/d/... or https://youtube.com/watch?v=..."
+                      placeholder="https://drive.google.com/file/d/... or https://youtu.be/... or https://example.com/demo.mp4"
                       className="input-field"
                     />
                   </div>

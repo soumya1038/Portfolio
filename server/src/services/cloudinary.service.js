@@ -21,6 +21,20 @@ export const initCloudinary = () => {
   return true;
 };
 
+const isPdfSource = (value) => {
+  if (!value || typeof value !== 'string') return false;
+  const target = value.trim().toLowerCase();
+  return (
+    target.startsWith('data:application/pdf') ||
+    target.includes('/raw/upload/') ||
+    target.includes('format=pdf') ||
+    /\.pdf(?:$|[?#])/.test(target)
+  );
+};
+
+const inferUploadResourceType = (value) => (isPdfSource(value) ? 'raw' : 'image');
+const inferResourceTypeFromUrl = (url) => (isPdfSource(url) ? 'raw' : 'image');
+
 export const generateUploadSignature = (req, res, next) => {
   try {
     if (!initCloudinary()) {
@@ -65,25 +79,33 @@ export const uploadImage = async (req, res, next) => {
     const { image, folder = 'portfolio' } = req.body;
 
     if (!image) {
-      throw new ApiError(400, 'Image data is required');
+      throw new ApiError(400, 'Media data is required');
     }
 
-    const result = await cloudinary.uploader.upload(image, {
+    const resourceType = inferUploadResourceType(image);
+    const uploadOptions = {
       folder,
-      resource_type: 'image',
-      transformation: [
+      resource_type: resourceType,
+    };
+
+    if (resourceType === 'image') {
+      uploadOptions.transformation = [
         { width: 1200, height: 1200, crop: 'limit' },
         { quality: 'auto' },
         { fetch_format: 'auto' },
-      ],
-    });
+      ];
+    }
+
+    const result = await cloudinary.uploader.upload(image, uploadOptions);
 
     res.json({
       success: true,
-      message: 'Image uploaded successfully',
+      message: resourceType === 'raw' ? 'File uploaded successfully' : 'Image uploaded successfully',
       data: {
         url: result.secure_url,
         publicId: result.public_id,
+        resourceType: result.resource_type,
+        format: result.format,
         width: result.width,
         height: result.height,
       },
@@ -108,10 +130,17 @@ export const deleteImage = async (req, res, next) => {
       throw new ApiError(400, 'Public ID is required');
     }
 
-    const result = await cloudinary.uploader.destroy(publicId, {
+    let result = await cloudinary.uploader.destroy(publicId, {
       invalidate: true,
       resource_type: 'image',
     });
+
+    if (result.result === 'not found') {
+      result = await cloudinary.uploader.destroy(publicId, {
+        invalidate: true,
+        resource_type: 'raw',
+      });
+    }
 
     if (result.result !== 'ok' && result.result !== 'not found') {
       throw new ApiError(400, 'Failed to delete image');
@@ -170,29 +199,37 @@ export const deleteImagesByUrl = async (urls = []) => {
       return;
     }
 
-    const publicIds = urls
+    const trackedAssets = urls
       .filter(Boolean)
       .map((url) => {
         const publicId = extractPublicIdFromUrl(url);
-        console.log(`[Cloudinary] Extract: ${url} => ${publicId}`);
-        return publicId;
+        return {
+          publicId,
+          resourceType: inferResourceTypeFromUrl(url),
+        };
       })
-      .filter(Boolean);
+      .filter((asset) => Boolean(asset.publicId));
 
-    if (publicIds.length === 0) {
+    if (trackedAssets.length === 0) {
       console.log('[Cloudinary] No valid publicIds to delete');
       return;
     }
 
-    console.log(`[Cloudinary] Deleting ${publicIds.length} images`);
+    console.log(`[Cloudinary] Deleting ${trackedAssets.length} assets`);
 
     const results = await Promise.allSettled(
-      publicIds.map(async (publicId) => {
+      trackedAssets.map(async ({ publicId, resourceType }) => {
         try {
-          const result = await cloudinary.uploader.destroy(publicId, {
+          let result = await cloudinary.uploader.destroy(publicId, {
             invalidate: true,
-            resource_type: 'image',
+            resource_type: resourceType,
           });
+          if (result.result === 'not found') {
+            result = await cloudinary.uploader.destroy(publicId, {
+              invalidate: true,
+              resource_type: resourceType === 'image' ? 'raw' : 'image',
+            });
+          }
           console.log(`[Cloudinary] Delete ${publicId}: ${result.result}`);
           return result;
         } catch (error) {

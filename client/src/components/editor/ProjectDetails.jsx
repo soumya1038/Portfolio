@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { FiX, FiEdit2, FiGithub, FiExternalLink, FiStar, FiGitBranch, FiCode, FiCalendar, FiTag, FiPlay } from 'react-icons/fi';
+import { FiX, FiEdit2, FiGithub, FiExternalLink, FiStar, FiGitBranch, FiCode, FiCalendar, FiTag, FiPlay, FiFileText, FiDownload } from 'react-icons/fi';
 import DemoVideoPlayer from '../common/DemoVideoPlayer';
 import MarkdownContent from '../common/MarkdownContent';
+import { isPdfAsset } from '../../utils/media';
 
 function ProjectDetails({ project, onClose, onEdit }) {
   if (!project) return null;
@@ -64,15 +65,30 @@ function ProjectDetails({ project, onClose, onEdit }) {
         {/* Main Image */}
         {project.images?.length > 0 && (
           <div className="rounded-2xl overflow-hidden border border-white/70 shadow-soft">
-            <img
-              src={project.images[0]}
-              alt={project.title}
-              className="w-full h-48 sm:h-64 object-cover cursor-pointer"
-              onClick={() => openLightbox(project.images[0], project.title)}
-              onError={(e) => {
-                e.target.src = defaultImage;
-              }}
-            />
+            {isPdfAsset(project.images[0]) ? (
+              <div className="w-full h-48 sm:h-64 bg-gradient-to-br from-primary-100 via-white to-accent-100 flex flex-col items-center justify-center gap-3 p-4 text-center">
+                <FiFileText className="h-12 w-12 text-primary-700" />
+                <a
+                  href={project.images[0]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-secondary inline-flex items-center gap-2 text-sm"
+                >
+                  <FiExternalLink className="h-4 w-4" />
+                  Open Cover PDF
+                </a>
+              </div>
+            ) : (
+              <img
+                src={project.images[0]}
+                alt={project.title}
+                className="w-full h-48 sm:h-64 object-cover cursor-pointer"
+                onClick={() => openLightbox(project.images[0], project.title)}
+                onError={(e) => {
+                  e.target.src = defaultImage;
+                }}
+              />
+            )}
           </div>
         )}
 
@@ -283,19 +299,31 @@ function ProjectDetails({ project, onClose, onEdit }) {
         {/* All Images */}
         {project.images?.length > 1 && (
           <div>
-            <h4 className="text-sm font-medium text-gray-700 mb-3">All Images</h4>
+            <h4 className="text-sm font-medium text-gray-700 mb-3">All Media</h4>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
               {project.images.map((img, index) => (
                 <div key={index} className="rounded-lg overflow-hidden">
-                  <img
-                    src={img}
-                    alt={`${project.title} - ${index + 1}`}
-                    className="w-full h-32 object-cover hover:scale-105 transition-transform cursor-pointer"
-                    onClick={() => openLightbox(img, `${project.title} - ${index + 1}`)}
-                    onError={(e) => {
-                      e.target.src = defaultImage;
-                    }}
-                  />
+                  {isPdfAsset(img) ? (
+                    <a
+                      href={img}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-full h-32 bg-white/80 border border-line flex flex-col items-center justify-center gap-1.5 text-primary-700"
+                    >
+                      <FiFileText className="h-7 w-7" />
+                      <span className="text-[11px] font-semibold uppercase tracking-[0.2em]">PDF</span>
+                    </a>
+                  ) : (
+                    <img
+                      src={img}
+                      alt={`${project.title} - ${index + 1}`}
+                      className="w-full h-32 object-cover hover:scale-105 transition-transform cursor-pointer"
+                      onClick={() => openLightbox(img, `${project.title} - ${index + 1}`)}
+                      onError={(e) => {
+                        e.target.src = defaultImage;
+                      }}
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -322,13 +350,26 @@ function ProjectDetails({ project, onClose, onEdit }) {
           role="dialog"
           aria-modal="true"
         >
-          <button
-            type="button"
-            onClick={closeLightbox}
-            className="absolute top-6 right-6 bg-white/90 text-ink px-4 py-2 rounded-full text-sm font-semibold shadow-soft hover:bg-white"
+          <div
+            className="absolute top-6 right-6 flex items-center gap-2"
+            onClick={(event) => event.stopPropagation()}
           >
-            Close
-          </button>
+            <a
+              href={lightbox.src}
+              download
+              className="media-lightbox-action inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold shadow-soft"
+            >
+              <FiDownload className="h-4 w-4" />
+              Download
+            </a>
+            <button
+              type="button"
+              onClick={closeLightbox}
+              className="media-lightbox-action px-4 py-2 rounded-full text-sm font-semibold shadow-soft"
+            >
+              Close
+            </button>
+          </div>
           <img
             src={lightbox.src}
             alt={lightbox.alt}

@@ -6,6 +6,7 @@ import ImageUploader from './ImageUploader';
 import { achievementService } from '../../services/achievement.service';
 import { uploadService } from '../../services/upload.service';
 import { getMarkdownPreview } from '../../utils/markdown';
+import { isPdfAsset } from '../../utils/media';
 import MarkdownContent from '../common/MarkdownContent';
 
 const emptyAchievement = {
@@ -121,7 +122,7 @@ function AchievementsEditor({ achievements: incomingAchievements = [] }) {
 
   const uploadAchievementImage = async (imageUrl) => {
     if (imageUrl && isDataUrl(imageUrl)) {
-      const result = await uploadService.uploadImage(imageUrl);
+      const result = await uploadService.uploadFile(imageUrl);
       return { imageUrl: result.url, publicId: result.publicId };
     }
     return { imageUrl, publicId: null };
@@ -308,7 +309,8 @@ function AchievementsEditor({ achievements: incomingAchievements = [] }) {
           <ImageUploader
             value={formData.imageUrl}
             onChange={(url) => setFormData((prev) => ({ ...prev, imageUrl: url }))}
-            label="Certificate Image"
+            label="Certificate Image / PDF"
+            allowPdf
           />
         </div>
 
@@ -410,13 +412,25 @@ function AchievementsEditor({ achievements: incomingAchievements = [] }) {
             </div>
 
             {viewingAchievement.imageUrl && (
-              <div className="rounded-2xl overflow-hidden border border-line">
-                <img
-                  src={viewingAchievement.imageUrl}
-                  alt={viewingAchievement.title}
-                  className="w-full h-56 object-cover"
-                />
-              </div>
+              isPdfAsset(viewingAchievement.imageUrl) ? (
+                <a
+                  href={viewingAchievement.imageUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-2xl border border-line p-4 bg-white/70 inline-flex flex-col items-center justify-center gap-3 text-primary-700 font-semibold text-sm min-h-56"
+                >
+                  <span>Open Certificate PDF</span>
+                  <FiExternalLink className="h-4 w-4" />
+                </a>
+              ) : (
+                <div className="rounded-2xl overflow-hidden border border-line">
+                  <img
+                    src={viewingAchievement.imageUrl}
+                    alt={viewingAchievement.title}
+                    className="w-full h-56 object-cover"
+                  />
+                </div>
+              )
             )}
           </div>
         </div>
@@ -478,13 +492,19 @@ function AchievementsEditor({ achievements: incomingAchievements = [] }) {
                     </div>
 
                     {achievement.imageUrl && (
-                      <div className="w-full lg:w-44 h-28 rounded-2xl overflow-hidden border border-line flex-shrink-0">
-                        <img
-                          src={achievement.imageUrl}
-                          alt={achievement.title}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
+                      isPdfAsset(achievement.imageUrl) ? (
+                        <div className="w-full lg:w-44 h-28 rounded-2xl border border-line bg-white/70 flex-shrink-0 flex items-center justify-center">
+                          <span className="text-xs font-semibold text-primary-700 uppercase tracking-[0.2em]">PDF</span>
+                        </div>
+                      ) : (
+                        <div className="w-full lg:w-44 h-28 rounded-2xl overflow-hidden border border-line flex-shrink-0">
+                          <img
+                            src={achievement.imageUrl}
+                            alt={achievement.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )
                     )}
 
                     <div className="flex gap-2 lg:flex-col lg:items-end">
