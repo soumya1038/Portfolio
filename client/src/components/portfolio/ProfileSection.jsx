@@ -74,7 +74,7 @@ function ProfileSection({ portfolio, stats = [] }) {
             alt={portfolio.name}
             className="w-64 h-64 md:w-80 md:h-80 rounded-[28px] object-cover"
           />
-          <div className="absolute -bottom-4 -right-4 bg-white text-ink px-4 py-2 rounded-2xl shadow-soft flex items-center gap-2 text-sm font-semibold">
+          <div className="absolute -bottom-4 -right-4 bg-white text-slate-900 px-4 py-2 rounded-2xl shadow-soft flex items-center gap-2 text-sm font-semibold">
             <span className="inline-flex h-2 w-2 rounded-full bg-primary-500"></span>
             Open to work
             <FiArrowUpRight className="h-4 w-4" />
