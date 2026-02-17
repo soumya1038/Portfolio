@@ -2,13 +2,19 @@ import { useEffect, useState } from 'react';
 import { FiX, FiEdit2, FiGithub, FiExternalLink, FiStar, FiGitBranch, FiCode, FiCalendar, FiTag, FiPlay, FiFileText, FiDownload } from 'react-icons/fi';
 import DemoVideoPlayer from '../common/DemoVideoPlayer';
 import MarkdownContent from '../common/MarkdownContent';
+import ImageFallbackIcon from '../common/ImageFallbackIcon';
 import { isPdfAsset } from '../../utils/media';
 
 function ProjectDetails({ project, onClose, onEdit }) {
   if (!project) return null;
 
-  const defaultImage = 'https://via.placeholder.com/800x400/e2e8f0/64748b?text=No+Image';
   const [lightbox, setLightbox] = useState({ open: false, src: '', alt: '' });
+  const [mainImageFailed, setMainImageFailed] = useState(false);
+  const [galleryImageFailures, setGalleryImageFailures] = useState({});
+  const mainImage = project.images?.[0] || '';
+  const imageSignature = project.images?.join('|') || '';
+  const mainImageIsPdf = Boolean(mainImage) && isPdfAsset(mainImage);
+  const showMainImageFallback = !mainImage || mainImageFailed;
   const demoVideos = project.demoVideos?.length
     ? project.demoVideos
     : project.demoVideoUrl
@@ -34,6 +40,11 @@ function ProjectDetails({ project, onClose, onEdit }) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [lightbox.open]);
+
+  useEffect(() => {
+    setMainImageFailed(false);
+    setGalleryImageFailures({});
+  }, [project._id, imageSignature]);
 
   return (
     <div className="neo-panel overflow-hidden">
@@ -63,34 +74,34 @@ function ProjectDetails({ project, onClose, onEdit }) {
       {/* Content */}
       <div className="p-4 sm:p-6 space-y-6">
         {/* Main Image */}
-        {project.images?.length > 0 && (
-          <div className="rounded-2xl overflow-hidden border border-white/70 shadow-soft">
-            {isPdfAsset(project.images[0]) ? (
-              <div className="w-full h-48 sm:h-64 bg-gradient-to-br from-primary-100 via-white to-accent-100 flex flex-col items-center justify-center gap-3 p-4 text-center">
-                <FiFileText className="h-12 w-12 text-primary-700" />
-                <a
-                  href={project.images[0]}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-secondary inline-flex items-center gap-2 text-sm"
-                >
-                  <FiExternalLink className="h-4 w-4" />
-                  Open Cover PDF
-                </a>
-              </div>
-            ) : (
-              <img
-                src={project.images[0]}
-                alt={project.title}
-                className="w-full h-48 sm:h-64 object-cover cursor-pointer"
-                onClick={() => openLightbox(project.images[0], project.title)}
-                onError={(e) => {
-                  e.target.src = defaultImage;
-                }}
-              />
-            )}
-          </div>
-        )}
+        <div className="rounded-2xl overflow-hidden border border-white/70 shadow-soft">
+          {mainImageIsPdf ? (
+            <div className="w-full h-48 sm:h-64 bg-gradient-to-br from-primary-100 via-white to-accent-100 flex flex-col items-center justify-center gap-3 p-4 text-center">
+              <FiFileText className="h-12 w-12 text-primary-700" />
+              <a
+                href={mainImage}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-secondary inline-flex items-center gap-2 text-sm"
+              >
+                <FiExternalLink className="h-4 w-4" />
+                Open Cover PDF
+              </a>
+            </div>
+          ) : showMainImageFallback ? (
+            <div className="w-full h-48 sm:h-64 bg-gradient-to-br from-slate-100 via-white to-cyan-50 flex flex-col items-center justify-center gap-2">
+              <ImageFallbackIcon />
+            </div>
+          ) : (
+            <img
+              src={mainImage}
+              alt={project.title}
+              className="w-full h-48 sm:h-64 object-cover cursor-pointer"
+              onClick={() => openLightbox(mainImage, project.title)}
+              onError={() => setMainImageFailed(true)}
+            />
+          )}
+        </div>
 
         {/* Title and Badges */}
         <div>
@@ -313,15 +324,22 @@ function ProjectDetails({ project, onClose, onEdit }) {
                       <FiFileText className="h-7 w-7" />
                       <span className="text-[11px] font-semibold uppercase tracking-[0.2em]">PDF</span>
                     </a>
+                  ) : galleryImageFailures[index] ? (
+                    <div className="w-full h-32 bg-gradient-to-br from-slate-100 via-white to-cyan-50 flex flex-col items-center justify-center gap-1.5">
+                      <ImageFallbackIcon size={30} />
+                    </div>
                   ) : (
                     <img
                       src={img}
                       alt={`${project.title} - ${index + 1}`}
                       className="w-full h-32 object-cover hover:scale-105 transition-transform cursor-pointer"
                       onClick={() => openLightbox(img, `${project.title} - ${index + 1}`)}
-                      onError={(e) => {
-                        e.target.src = defaultImage;
-                      }}
+                      onError={() =>
+                        setGalleryImageFailures((prev) => ({
+                          ...prev,
+                          [index]: true,
+                        }))
+                      }
                     />
                   )}
                 </div>

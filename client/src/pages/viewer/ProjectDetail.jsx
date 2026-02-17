@@ -18,6 +18,7 @@ import Footer from '../../components/common/Footer';
 import Loading from '../../components/common/Loading';
 import DemoVideoPlayer from '../../components/common/DemoVideoPlayer';
 import MarkdownContent from '../../components/common/MarkdownContent';
+import ImageFallbackIcon from '../../components/common/ImageFallbackIcon';
 import { projectService } from '../../services/project.service';
 import { isPdfAsset } from '../../utils/media';
 
@@ -27,6 +28,8 @@ const galleryCardClass =
 function ProjectDetail() {
   const { id } = useParams();
   const [lightbox, setLightbox] = useState({ open: false, src: '', alt: '' });
+  const [heroImageFailed, setHeroImageFailed] = useState(false);
+  const [galleryImageFailures, setGalleryImageFailures] = useState({});
 
   const openLightbox = (src, alt) => {
     if (!src) return;
@@ -47,6 +50,11 @@ function ProjectDetail() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [lightbox.open]);
+
+  useEffect(() => {
+    setHeroImageFailed(false);
+    setGalleryImageFailures({});
+  }, [id]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['project', id],
@@ -101,6 +109,7 @@ function ProjectDetail() {
   const mediaAssets = project.images || [];
   const heroMedia = mediaAssets[0];
   const heroMediaIsPdf = isPdfAsset(heroMedia);
+  const showHeroImageFallback = !heroMedia || heroImageFailed;
   const extraMedia = mediaAssets.slice(1);
   const createdAt = project.createdAt ? new Date(project.createdAt).toLocaleDateString() : null;
   const updatedAt = project.updatedAt ? new Date(project.updatedAt).toLocaleDateString() : null;
@@ -151,8 +160,11 @@ function ProjectDetail() {
           <div className="mt-6 grid grid-cols-1 lg:grid-cols-[1.35fr_0.65fr] gap-8">
             <div className="space-y-6">
               <div className="overflow-hidden rounded-3xl border border-white/70 shadow-soft bg-white">
-                {heroMedia ? (
-                  heroMediaIsPdf ? (
+                {showHeroImageFallback ? (
+                  <div className="h-60 sm:h-72 md:h-96 bg-gradient-to-br from-slate-100 via-white to-cyan-50 flex items-center justify-center">
+                    <ImageFallbackIcon size={56} />
+                  </div>
+                ) : heroMediaIsPdf ? (
                     <div className="h-60 sm:h-72 md:h-96 bg-gradient-to-br from-primary-100 via-white to-accent-100 flex flex-col items-center justify-center gap-4 p-6 text-center">
                       <FiFileText className="h-14 w-14 text-primary-700" />
                       <p className="text-sm text-gray-600">Cover file is a PDF document.</p>
@@ -172,12 +184,8 @@ function ProjectDetail() {
                       alt={project.title}
                       className="w-full h-60 sm:h-72 md:h-96 object-cover cursor-pointer"
                       onClick={() => openLightbox(heroMedia, project.title)}
+                      onError={() => setHeroImageFailed(true)}
                     />
-                  )
-                ) : (
-                  <div className="h-60 sm:h-72 md:h-96 bg-gradient-to-br from-primary-100 via-white to-accent-100 flex items-center justify-center">
-                    <span className="text-gray-500 font-semibold">No preview image</span>
-                  </div>
                 )}
               </div>
 
@@ -338,12 +346,22 @@ function ProjectDetail() {
                               Open PDF
                             </a>
                           </div>
+                        ) : galleryImageFailures[item.id] ? (
+                          <div className="h-full w-full bg-gradient-to-br from-slate-100 via-white to-cyan-50 flex items-center justify-center">
+                            <ImageFallbackIcon size={40} />
+                          </div>
                         ) : (
                           <img
                             src={item.url}
                             alt={item.alt}
                             className="w-full h-full object-cover cursor-pointer transition-transform duration-500 group-hover:scale-[1.02]"
                             onClick={() => openLightbox(item.url, item.alt)}
+                            onError={() =>
+                              setGalleryImageFailures((prev) => ({
+                                ...prev,
+                                [item.id]: true,
+                              }))
+                            }
                           />
                         )}
                       </div>

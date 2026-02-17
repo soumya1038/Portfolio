@@ -60,6 +60,68 @@ const portfolioSchema = new mongoose.Schema(
       type: String,
       default: '',
     },
+    ownerSettings: {
+      keepServerAwake: {
+        type: Boolean,
+        default: false,
+      },
+    },
+    engagement: {
+      uniqueVisitors: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+      visitorFingerprints: {
+        type: [String],
+        default: [],
+        select: false,
+      },
+      totalRatings: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+      ratingSum: {
+        type: Number,
+        default: 0,
+        min: 0,
+      },
+      averageRating: {
+        type: Number,
+        default: 0,
+        min: 0,
+        max: 5,
+      },
+      feedback: [
+        {
+          raterFingerprint: {
+            type: String,
+            trim: true,
+            default: '',
+          },
+          rating: {
+            type: Number,
+            required: true,
+            min: 1,
+            max: 5,
+          },
+          message: {
+            type: String,
+            trim: true,
+            maxlength: [700, 'Feedback cannot exceed 700 characters'],
+          },
+          createdAt: {
+            type: Date,
+            default: Date.now,
+          },
+          updatedAt: {
+            type: Date,
+            default: Date.now,
+          },
+        },
+      ],
+    },
   },
   {
     timestamps: true,

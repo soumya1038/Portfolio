@@ -1,17 +1,24 @@
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiGithub, FiExternalLink, FiStar, FiGitBranch, FiFileText } from 'react-icons/fi';
 import { getMarkdownPreview } from '../../utils/markdown';
 import { isPdfAsset } from '../../utils/media';
+import ImageFallbackIcon from '../common/ImageFallbackIcon';
 
 function ProjectCard({ project, featured = false }) {
   const navigate = useNavigate();
-  const defaultImage = 'https://via.placeholder.com/400x300/e2e8f0/64748b?text=No+Image';
-  const mainImage = project.images?.[0] || defaultImage;
-  const mainImageIsPdf = isPdfAsset(mainImage);
+  const [imageFailed, setImageFailed] = useState(false);
+  const mainImage = project.images?.[0] || '';
+  const mainImageIsPdf = Boolean(mainImage) && isPdfAsset(mainImage);
+  const showImageFallback = !mainImage || imageFailed;
   const hasLinks = Boolean(project.githubUrl || project.liveUrl);
   const descriptionPreview =
     getMarkdownPreview(project.description, 180) ||
     'A crafted build with a focus on detail, usability, and performance.';
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [project._id, mainImage]);
 
   return (
     <div
@@ -35,14 +42,16 @@ function ProjectCard({ project, featured = false }) {
             <FiFileText className="h-10 w-10 text-primary-700" />
             <span className="text-xs font-semibold uppercase tracking-[0.2em] text-primary-700">PDF Cover</span>
           </div>
+        ) : showImageFallback ? (
+          <div className="w-full h-52 bg-gradient-to-br from-slate-100 via-white to-cyan-50 flex flex-col items-center justify-center gap-2">
+            <ImageFallbackIcon />
+          </div>
         ) : (
           <img
             src={mainImage}
             alt={project.title}
             className="w-full h-52 object-cover group-hover:scale-105 transition-transform duration-500"
-            onError={(e) => {
-              e.target.src = defaultImage;
-            }}
+            onError={() => setImageFailed(true)}
           />
         )}
         <div className="project-card__image-wash absolute inset-0"></div>

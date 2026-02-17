@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 function Footer() {
   const currentYear = new Date().getFullYear();
 
@@ -17,9 +19,9 @@ function Footer() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
-            <a href="#projects" className="text-sm hover:text-white transition-colors">Projects</a>
-            <a href="#skills" className="text-sm hover:text-white transition-colors">Skills</a>
-            <a href="#contact" className="text-sm hover:text-white transition-colors">Contact</a>
+            <Link to="/?section=projects" className="text-sm hover:text-white transition-colors">Projects</Link>
+            <Link to="/?section=skills" className="text-sm hover:text-white transition-colors">Skills</Link>
+            <Link to="/?section=contact" className="text-sm hover:text-white transition-colors">Contact</Link>
           </div>
         </div>
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-6 text-sm text-gray-400">

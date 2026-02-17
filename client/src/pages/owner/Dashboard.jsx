@@ -1,6 +1,22 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { FiUser, FiFolder, FiLogOut, FiPlus, FiMenu, FiX, FiEye, FiEdit2, FiTrash2, FiExternalLink, FiGithub, FiStar, FiGitBranch } from 'react-icons/fi';
+import {
+  FiUser,
+  FiFolder,
+  FiLogOut,
+  FiPlus,
+  FiMenu,
+  FiX,
+  FiEye,
+  FiEdit2,
+  FiTrash2,
+  FiExternalLink,
+  FiGithub,
+  FiStar,
+  FiGitBranch,
+  FiMessageSquare,
+  FiPower,
+} from 'react-icons/fi';
 import toast from 'react-hot-toast';
 import { useAuth } from '../../hooks/useAuth';
 import Loading from '../../components/common/Loading';
@@ -40,6 +56,18 @@ function Dashboard() {
     queryFn: () => projectService.getProjects(),
   });
 
+  // Fetch suggestions (feedback)
+  const { data: suggestionsData, isLoading: suggestionsLoading } = useQuery({
+    queryKey: ['suggestions'],
+    queryFn: portfolioService.getSuggestions,
+  });
+
+  // Fetch owner settings (protected)
+  const { data: ownerSettingsData, isLoading: ownerSettingsLoading } = useQuery({
+    queryKey: ['owner-settings'],
+    queryFn: portfolioService.getOwnerSettings,
+  });
+
   // Delete project mutation
   const deleteProjectMutation = useMutation({
     mutationFn: projectService.deleteProject,
@@ -49,6 +77,40 @@ function Dashboard() {
     },
     onError: (error) => {
       toast.error(error.message || 'Failed to delete project');
+    },
+  });
+
+  const deleteSuggestionMutation = useMutation({
+    mutationFn: portfolioService.deleteSuggestion,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+      toast.success('Suggestion deleted');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete suggestion');
+    },
+  });
+
+  const clearSuggestionsMutation = useMutation({
+    mutationFn: portfolioService.clearSuggestions,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['suggestions'] });
+      toast.success('All suggestions deleted');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to delete suggestions');
+    },
+  });
+
+  const updateOwnerSettingsMutation = useMutation({
+    mutationFn: portfolioService.updateOwnerSettings,
+    onSuccess: (response) => {
+      queryClient.invalidateQueries({ queryKey: ['owner-settings'] });
+      const keepAwakeEnabled = Boolean(response?.data?.keepServerAwake);
+      toast.success(keepAwakeEnabled ? 'Keep-awake enabled' : 'Keep-awake disabled');
+    },
+    onError: (error) => {
+      toast.error(error.message || 'Failed to update owner settings');
     },
   });
 
@@ -64,6 +126,18 @@ function Dashboard() {
     }
   };
 
+  const handleDeleteSuggestion = (suggestionId) => {
+    if (window.confirm('Delete this suggestion?')) {
+      deleteSuggestionMutation.mutate(suggestionId);
+    }
+  };
+
+  const handleDeleteAllSuggestions = () => {
+    if (window.confirm('Delete all suggestions? This cannot be undone.')) {
+      clearSuggestionsMutation.mutate();
+    }
+  };
+
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setEditingProject(null);
@@ -72,13 +146,55 @@ function Dashboard() {
     setIsSidebarOpen(false);
   };
 
-  const isLoading = portfolioLoading || projectsLoading || achievementsLoading;
+  const keepServerAwakeEnabled = Boolean(ownerSettingsData?.data?.keepServerAwake);
+
+  useEffect(() => {
+    if (!keepServerAwakeEnabled) return undefined;
+
+    let pingInFlight = false;
+
+    const pingServer = async () => {
+      if (pingInFlight) return;
+      pingInFlight = true;
+      try {
+        await portfolioService.pingKeepAlive();
+      } catch {
+        // Quiet failure; keep-alive is best-effort.
+      } finally {
+        pingInFlight = false;
+      }
+    };
+
+    const intervalId = window.setInterval(() => {
+      pingServer();
+    }, 14 * 60 * 1000);
+    pingServer();
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, [keepServerAwakeEnabled]);
+
+  const handleKeepServerAwakeToggle = () => {
+    updateOwnerSettingsMutation.mutate({
+      keepServerAwake: !keepServerAwakeEnabled,
+    });
+  };
+
+  const isLoading =
+    portfolioLoading ||
+    projectsLoading ||
+    achievementsLoading ||
+    suggestionsLoading ||
+    ownerSettingsLoading;
   const portfolio = portfolioData?.data;
   const projects = projectsData?.data || [];
   const achievements = achievementsData?.data || [];
+  const suggestions = suggestionsData?.data || [];
   const featuredCount = projects.filter((project) => project.featured).length;
   const githubCount = projects.filter((project) => project.source === 'github').length;
   const achievementCount = achievements.length;
+  const suggestionCount = suggestions.length;
   const ownerName = portfolio?.name || 'Owner';
   const dashboardStats = [
     { label: 'Projects', value: projects.length },
@@ -86,6 +202,7 @@ function Dashboard() {
     { label: 'GitHub Imports', value: githubCount },
     { label: 'Skills', value: portfolio?.skills?.length || 0 },
     { label: 'Achievements', value: achievementCount },
+    { label: 'Suggestions', value: suggestionCount },
   ];
 
   if (isLoading) {
@@ -200,13 +317,62 @@ function Dashboard() {
                   {achievementCount}
                 </span>
               </button>
+              <button
+                onClick={() => handleTabChange('suggestions')}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors ${
+                  activeTab === 'suggestions'
+                    ? 'bg-primary-50 text-primary-700'
+                    : 'text-gray-600 hover:bg-white/70'
+                }`}
+              >
+                <FiMessageSquare className="h-5 w-5" />
+                Suggestions
+                <span className="ml-auto bg-white/70 text-gray-600 text-xs px-2 py-0.5 rounded-full">
+                  {suggestionCount}
+                </span>
+              </button>
             </nav>
           </aside>
 
           {/* Main Content */}
           <main className="flex-1 min-w-0 space-y-6">
+            <div className="neo-panel p-4 sm:p-5">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-ink flex items-center gap-2">
+                    <FiPower className="h-4 w-4" />
+                    Render Keep-Awake
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Sends a ping every 14 minutes while this owner dashboard tab remains open.
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`text-xs font-semibold ${keepServerAwakeEnabled ? 'text-emerald-600' : 'text-gray-500'}`}>
+                    {keepServerAwakeEnabled ? 'ON' : 'OFF'}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleKeepServerAwakeToggle}
+                    disabled={updateOwnerSettingsMutation.isPending}
+                    className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                      keepServerAwakeEnabled ? 'bg-emerald-500' : 'bg-gray-300'
+                    } ${updateOwnerSettingsMutation.isPending ? 'opacity-70 cursor-not-allowed' : ''}`}
+                    aria-pressed={keepServerAwakeEnabled}
+                    aria-label="Toggle render keep-awake"
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                        keepServerAwakeEnabled ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {/* Overview */}
-            <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
               {dashboardStats.map((stat) => (
                 <div key={stat.label} className="neo-panel p-4">
                   <p className="text-2xl font-bold text-ink">{stat.value}</p>
@@ -223,6 +389,66 @@ function Dashboard() {
             {/* Achievements Tab */}
             {activeTab === 'achievements' && (
               <AchievementsEditor achievements={achievements} />
+            )}
+
+            {/* Suggestions Tab */}
+            {activeTab === 'suggestions' && (
+              <div className="neo-panel p-4 sm:p-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">Suggestions</h2>
+                    <p className="text-sm text-gray-500 mt-1">Feedback captured from public appreciation ratings</p>
+                  </div>
+                  <button
+                    onClick={handleDeleteAllSuggestions}
+                    className="btn-danger text-sm w-full sm:w-auto"
+                    disabled={suggestions.length === 0 || clearSuggestionsMutation.isPending}
+                  >
+                    {clearSuggestionsMutation.isPending ? 'Deleting...' : 'Delete All Suggestions'}
+                  </button>
+                </div>
+
+                {suggestions.length === 0 ? (
+                  <div className="text-center py-10 border border-dashed border-primary-200 rounded-2xl bg-white/70">
+                    <FiMessageSquare className="h-10 w-10 text-gray-400 mx-auto mb-3" />
+                    <p className="text-gray-600">No suggestions yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {suggestions.map((suggestion) => (
+                      <div key={suggestion._id} className="rounded-xl border border-white/70 bg-white/85 p-4">
+                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 text-sm mb-2">
+                              <span className="font-semibold text-ink">Rating:</span>
+                              <span className="text-amber-500">
+                                {'★'.repeat(Number(suggestion.rating || 0))}
+                              </span>
+                              <span className="text-gray-500">
+                                ({Number(suggestion.rating || 0)}/5)
+                              </span>
+                            </div>
+                            <p className="text-sm text-gray-700 whitespace-pre-wrap break-words">
+                              {suggestion.message || 'No message provided.'}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-2">
+                              {suggestion.createdAt ? new Date(suggestion.createdAt).toLocaleString() : ''}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteSuggestion(suggestion._id)}
+                            className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors self-start"
+                            title="Delete suggestion"
+                            disabled={deleteSuggestionMutation.isPending}
+                          >
+                            <FiTrash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Projects Tab - List View */}
