@@ -29,6 +29,8 @@ import { projectService } from '../../services/project.service';
 import { achievementService } from '../../services/achievement.service';
 import { getMarkdownPreview } from '../../utils/markdown';
 
+const KEEP_AWAKE_INTERVAL_MS = 9 * 60 * 1000;
+
 function Dashboard() {
   const [activeTab, setActiveTab] = useState('profile');
   const [editingProject, setEditingProject] = useState(null);
@@ -105,8 +107,14 @@ function Dashboard() {
   const updateOwnerSettingsMutation = useMutation({
     mutationFn: portfolioService.updateOwnerSettings,
     onSuccess: (response) => {
+      queryClient.setQueryData(['owner-settings'], response);
       queryClient.invalidateQueries({ queryKey: ['owner-settings'] });
       const keepAwakeEnabled = Boolean(response?.data?.keepServerAwake);
+      if (keepAwakeEnabled) {
+        portfolioService.pingKeepAlive().catch(() => {
+          // Quiet failure; keep-alive is best-effort.
+        });
+      }
       toast.success(keepAwakeEnabled ? 'Keep-awake enabled' : 'Keep-awake disabled');
     },
     onError: (error) => {
@@ -165,13 +173,34 @@ function Dashboard() {
       }
     };
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        pingServer();
+      }
+    };
+
+    const handleWindowFocus = () => {
+      pingServer();
+    };
+
+    const handleReconnect = () => {
+      pingServer();
+    };
+
     const intervalId = window.setInterval(() => {
       pingServer();
-    }, 14 * 60 * 1000);
+    }, KEEP_AWAKE_INTERVAL_MS);
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleWindowFocus);
+    window.addEventListener('online', handleReconnect);
     pingServer();
 
     return () => {
       window.clearInterval(intervalId);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleWindowFocus);
+      window.removeEventListener('online', handleReconnect);
     };
   }, [keepServerAwakeEnabled]);
 
@@ -344,7 +373,7 @@ function Dashboard() {
                     Render Keep-Awake
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
-                    Sends a ping every 14 minutes while this owner dashboard tab remains open.
+                    Uses the keep-awake schedule when configured, and this tab also sends fallback pings while open.
                   </p>
                 </div>
                 <div className="flex items-center gap-3">

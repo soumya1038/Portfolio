@@ -53,7 +53,7 @@ export const portfolioService = {
    * Ping backend to keep instance warm
    */
   pingKeepAlive: async () => {
-    const response = await api.get(`/portfolio/engagement?ping=${Date.now()}`);
+    const response = await api.get(`/?ping=${Date.now()}`);
     return response.data;
   },
 

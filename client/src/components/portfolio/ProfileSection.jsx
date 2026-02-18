@@ -4,6 +4,7 @@ function ProfileSection({ portfolio, stats = [] }) {
   if (!portfolio) return null;
 
   const defaultAvatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(portfolio.name || 'User')}&size=200&background=0ea5e9&color=fff`;
+  const availabilityTag = (portfolio.availabilityTag || '').trim() || 'Open to work';
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-10 items-center">
@@ -76,7 +77,7 @@ function ProfileSection({ portfolio, stats = [] }) {
           />
           <div className="absolute -bottom-4 -right-4 bg-white text-slate-900 px-4 py-2 rounded-2xl shadow-soft flex items-center gap-2 text-sm font-semibold">
             <span className="inline-flex h-2 w-2 rounded-full bg-primary-500"></span>
-            Open to work
+            {availabilityTag}
             <FiArrowUpRight className="h-4 w-4" />
           </div>
         </div>

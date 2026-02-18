@@ -390,6 +390,7 @@ export const updatePortfolio = async (req, res, next) => {
     const {
       name,
       title,
+      availabilityTag,
       bio,
       profileImage,
       email,
@@ -404,6 +405,7 @@ export const updatePortfolio = async (req, res, next) => {
 
     if (name !== undefined) portfolio.name = name;
     if (title !== undefined) portfolio.title = title;
+    if (availabilityTag !== undefined) portfolio.availabilityTag = availabilityTag;
     if (bio !== undefined) portfolio.bio = bio;
     if (email !== undefined) portfolio.email = email;
     if (location !== undefined) portfolio.location = location;

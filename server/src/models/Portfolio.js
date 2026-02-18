@@ -14,6 +14,12 @@ const portfolioSchema = new mongoose.Schema(
       maxlength: [150, 'Title cannot exceed 150 characters'],
       default: 'Developer',
     },
+    availabilityTag: {
+      type: String,
+      trim: true,
+      maxlength: [60, 'Availability tag cannot exceed 60 characters'],
+      default: 'Open to work',
+    },
     bio: {
       type: String,
       trim: true,

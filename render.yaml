@@ -16,3 +16,19 @@ services:
     rootDir: server
     buildCommand: npm install
     startCommand: npm start
+
+  - type: cron
+    name: p-folio-keep-awake
+    runtime: node
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm run keep-awake:once
+    schedule: "*/10 * * * *"
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: KEEP_AWAKE_TARGET_URL
+        fromService:
+          type: web
+          name: p-folio-server
+          property: host

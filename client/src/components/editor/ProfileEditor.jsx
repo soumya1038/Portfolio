@@ -16,6 +16,7 @@ function ProfileEditor({ portfolio }) {
   const buildFormData = (data) => ({
     name: data?.name || '',
     title: data?.title || '',
+    availabilityTag: data?.availabilityTag || 'Open to work',
     bio: data?.bio || '',
     profileImage: data?.profileImage || '',
     email: data?.email || '',
@@ -132,6 +133,7 @@ function ProfileEditor({ portfolio }) {
       location: formData.location || '—',
       bio: formData.bio || 'No bio provided yet.',
       resumeUrl: formData.resumeUrl,
+      availabilityTag: formData.availabilityTag || 'Open to work',
       socialLinks: formData.socialLinks,
       skills: formData.skills || [],
       profileImage: formData.profileImage,
@@ -182,6 +184,10 @@ function ProfileEditor({ portfolio }) {
                 <div>
                   <span className="text-xs uppercase tracking-[0.2em] text-gray-400">Location</span>
                   <p>{profileDetails.location}</p>
+                </div>
+                <div>
+                  <span className="text-xs uppercase tracking-[0.2em] text-gray-400">Availability Tag</span>
+                  <p>{profileDetails.availabilityTag}</p>
                 </div>
               </div>
               <div>
@@ -267,6 +273,21 @@ function ProfileEditor({ portfolio }) {
               onChange={handleChange}
               className="input-field"
               placeholder="e.g., Full Stack Developer"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Availability Tag
+            </label>
+            <input
+              type="text"
+              name="availabilityTag"
+              value={formData.availabilityTag}
+              onChange={handleChange}
+              className="input-field"
+              placeholder="e.g., Open to work"
+              maxLength={60}
             />
           </div>
 

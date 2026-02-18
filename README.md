@@ -56,3 +56,15 @@ Use this pattern to replace images with your own:
 
 ## Contact
 Ready to collaborate or hire? Add your email, scheduling link, and social profiles here.
+
+## Render Keep-Awake (Toggle Controlled)
+This project includes a Render cron service (`p-folio-keep-awake`) that runs every 10 minutes.
+
+- The cron job reads `ownerSettings.keepServerAwake` from MongoDB.
+- If toggle is `ON`, it pings your server `/health` endpoint.
+- If toggle is `OFF`, it skips pinging, so the server can sleep.
+
+Set these env vars on the cron service:
+
+- `MONGODB_URI`: same database used by your API service
+- `KEEP_AWAKE_TARGET_URL`: auto-wired from `p-folio-server` host by `render.yaml` (or set manually if needed)

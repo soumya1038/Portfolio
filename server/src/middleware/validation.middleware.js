@@ -27,6 +27,11 @@ export const validatePortfolio = [
     .trim()
     .isLength({ max: 150 })
     .withMessage('Title must be 150 characters or less'),
+  body('availabilityTag')
+    .optional()
+    .trim()
+    .isLength({ max: 60 })
+    .withMessage('Availability tag must be 60 characters or less'),
   body('bio')
     .optional()
     .trim()
