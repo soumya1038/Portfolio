@@ -73,6 +73,13 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Health check
+app.get('/', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    message: 'Portfolio API is running',
+  });
+});
+
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
