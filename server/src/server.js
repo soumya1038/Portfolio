@@ -42,8 +42,27 @@ const authLimiter = rateLimit({
   skipSuccessfulRequests: true,
 });
 
+const credentialUpdateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: 'Too many credential update attempts, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+const passwordResetLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 3,
+  message: 'Too many password reset attempts, please try again later.',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 app.use('/api/', limiter);
 app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/change-email', credentialUpdateLimiter);
+app.use('/api/auth/change-password', credentialUpdateLimiter);
+app.use('/api/auth/reset-password', passwordResetLimiter);
 
 // CORS
 const allowedOrigins = process.env.CLIENT_URL 

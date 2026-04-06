@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { ApiError } from './error.middleware.js';
+import { getOwnerAuth } from '../services/ownerAuth.service.js';
 
 /**
  * Authentication middleware
@@ -20,11 +21,22 @@ export const protect = async (req, res, next) => {
 
     // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const ownerAuth = await getOwnerAuth();
+
+    const decodedEmail = String(decoded.email || '').toLowerCase();
+    const currentEmail = String(ownerAuth.email || '').toLowerCase();
+    const decodedSessionVersion = Number(decoded.sessionVersion ?? 0);
+    const currentSessionVersion = Number(ownerAuth.sessionVersion ?? 0);
+
+    if (decodedEmail !== currentEmail || decodedSessionVersion !== currentSessionVersion) {
+      throw new ApiError(401, 'Session is no longer valid. Please log in again.');
+    }
 
     // Attach user info to request
     req.user = {
-      email: decoded.email,
+      email: ownerAuth.email,
       role: 'owner',
+      sessionVersion: ownerAuth.sessionVersion,
     };
 
     next();
@@ -42,9 +54,9 @@ export const protect = async (req, res, next) => {
 /**
  * Generate JWT token
  */
-export const generateToken = (email) => {
+export const generateToken = (email, sessionVersion = 0) => {
   return jwt.sign(
-    { email },
+    { email, sessionVersion },
     process.env.JWT_SECRET,
     { expiresIn: '24h' }
   );

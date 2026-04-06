@@ -1,11 +1,26 @@
 import express from 'express';
-import { login, verifyToken, generateHash } from '../controllers/auth.controller.js';
+import {
+  changeEmail,
+  changePassword,
+  generateHash,
+  login,
+  resetPassword,
+  verifyToken,
+} from '../controllers/auth.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
-import { validateLogin } from '../middleware/validation.middleware.js';
+import {
+  validateChangeEmail,
+  validateChangePassword,
+  validateLogin,
+  validateResetPassword,
+} from '../middleware/validation.middleware.js';
 
 const router = express.Router();
 
 router.post('/login', validateLogin, login);
+router.post('/reset-password', validateResetPassword, resetPassword);
+router.post('/change-email', protect, validateChangeEmail, changeEmail);
+router.post('/change-password', protect, validateChangePassword, changePassword);
 
 if (process.env.NODE_ENV === 'development') {
   router.post('/hash', generateHash);
