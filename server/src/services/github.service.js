@@ -47,6 +47,42 @@ const githubFetch = async (url) => {
   return fetch(url, { headers });
 };
 
+const getLastPageFromLinkHeader = (linkHeader) => {
+  if (!linkHeader) return null;
+  const match = linkHeader.match(/page=(\d+)>; rel="last"/);
+  if (!match) return null;
+  const page = Number.parseInt(match[1], 10);
+  return Number.isFinite(page) ? page : null;
+};
+
+const fetchIssueCommentsCountByApiUrl = async (apiUrl) => {
+  const commentsResponse = await githubFetch(`${apiUrl}/issues/comments?per_page=1`);
+  if (!commentsResponse.ok) {
+    throw new Error(`Issue comments fetch failed with status ${commentsResponse.status}`);
+  }
+
+  const linkHeader = commentsResponse.headers.get('Link');
+  const lastPage = getLastPageFromLinkHeader(linkHeader);
+  if (lastPage) return lastPage;
+
+  const comments = await commentsResponse.json();
+  return Array.isArray(comments) ? comments.length : 0;
+};
+
+export const fetchRepoCommentsCount = async (githubUrl) => {
+  const parsed = parseGitHubUrl(githubUrl);
+  if (!parsed) return 0;
+
+  const { owner, repo } = parsed;
+  const apiUrl = `https://api.github.com/repos/${owner}/${repo}`;
+
+  try {
+    return await fetchIssueCommentsCountByApiUrl(apiUrl);
+  } catch {
+    return 0;
+  }
+};
+
 /**
  * Fetch repository details from GitHub API
  */
@@ -97,11 +133,9 @@ export const fetchRepoDetails = async (githubUrl) => {
       if (contribResponse.ok) {
         // Get count from Link header
         const linkHeader = contribResponse.headers.get('Link');
-        if (linkHeader) {
-          const match = linkHeader.match(/page=(\d+)>; rel="last"/);
-          if (match) {
-            contributorsCount = parseInt(match[1], 10);
-          }
+        const lastPage = getLastPageFromLinkHeader(linkHeader);
+        if (lastPage) {
+          contributorsCount = lastPage;
         } else {
           const contributors = await contribResponse.json();
           contributorsCount = contributors.length;
@@ -136,15 +170,24 @@ export const fetchRepoDetails = async (githubUrl) => {
       const commitsResponse = await githubFetch(`${apiUrl}/commits?per_page=1`);
       if (commitsResponse.ok) {
         const linkHeader = commitsResponse.headers.get('Link');
-        if (linkHeader) {
-          const match = linkHeader.match(/page=(\d+)>; rel="last"/);
-          if (match) {
-            commitsCount = parseInt(match[1], 10);
-          }
+        const lastPage = getLastPageFromLinkHeader(linkHeader);
+        if (lastPage) {
+          commitsCount = lastPage;
+        } else {
+          const commits = await commitsResponse.json();
+          commitsCount = Array.isArray(commits) ? commits.length : 0;
         }
       }
     } catch {
       // Ignore commits fetch errors
+    }
+
+    // Fetch issue comments count (used as project comments count for GitHub imports)
+    let commentsCount = 0;
+    try {
+      commentsCount = await fetchIssueCommentsCountByApiUrl(apiUrl);
+    } catch {
+      // Ignore comments fetch errors
     }
 
     // Build tech stack from languages and topics
@@ -160,6 +203,7 @@ export const fetchRepoDetails = async (githubUrl) => {
       githubUrl: data.html_url,
       liveUrl: data.homepage || '',
       source: 'github',
+      commentsCount,
       githubMeta: {
         stars: data.stargazers_count || 0,
         forks: data.forks_count || 0,

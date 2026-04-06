@@ -7,6 +7,7 @@ import {
   FiExternalLink,
   FiStar,
   FiGitBranch,
+  FiGitCommit,
   FiCalendar,
   FiTag,
   FiGlobe,
@@ -113,6 +114,9 @@ function ProjectDetail() {
   const extraMedia = mediaAssets.slice(1);
   const createdAt = project.createdAt ? new Date(project.createdAt).toLocaleDateString() : null;
   const updatedAt = project.updatedAt ? new Date(project.updatedAt).toLocaleDateString() : null;
+  const totalCommits = Number.isFinite(project.githubMeta?.commitsCount)
+    ? project.githubMeta.commitsCount
+    : 0;
   const demoVideos = project.demoVideos?.length
     ? project.demoVideos
     : project.demoVideoUrl
@@ -256,38 +260,47 @@ function ProjectDetail() {
                 </div>
               </div>
 
-              <div className="neo-panel p-6">
-                <h2 className="text-lg font-semibold text-ink mb-4">Project Stats</h2>
-                <div className="space-y-3 text-sm text-gray-600">
-                  {project.githubMeta?.stars !== undefined && (
+              {project.githubUrl && (
+                <div className="neo-panel p-6">
+                  <h2 className="text-lg font-semibold text-ink mb-4">Project Stats</h2>
+                  <div className="space-y-3 text-sm text-gray-600">
+                    {project.githubMeta?.stars !== undefined && (
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <FiStar className="h-4 w-4" />
+                          Stars
+                        </span>
+                        <span className="font-semibold text-ink">{project.githubMeta.stars}</span>
+                      </div>
+                    )}
+                    {project.githubMeta?.forks !== undefined && (
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <FiGitBranch className="h-4 w-4" />
+                          Forks
+                        </span>
+                        <span className="font-semibold text-ink">{project.githubMeta.forks}</span>
+                      </div>
+                    )}
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-2">
-                        <FiStar className="h-4 w-4" />
-                        Stars
+                        <FiGitCommit className="h-4 w-4" />
+                        Commits
                       </span>
-                      <span className="font-semibold text-ink">{project.githubMeta.stars}</span>
+                      <span className="font-semibold text-ink">{totalCommits}</span>
                     </div>
-                  )}
-                  {project.githubMeta?.forks !== undefined && (
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <FiGitBranch className="h-4 w-4" />
-                        Forks
-                      </span>
-                      <span className="font-semibold text-ink">{project.githubMeta.forks}</span>
-                    </div>
-                  )}
-                  {project.githubMeta?.language && (
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <FiTag className="h-4 w-4" />
-                        Language
-                      </span>
-                      <span className="font-semibold text-ink">{project.githubMeta.language}</span>
-                    </div>
-                  )}
+                    {project.githubMeta?.language && (
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <FiTag className="h-4 w-4" />
+                          Language
+                        </span>
+                        <span className="font-semibold text-ink">{project.githubMeta.language}</span>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="neo-panel p-6">
                 <h2 className="text-lg font-semibold text-ink mb-4">Timeline</h2>

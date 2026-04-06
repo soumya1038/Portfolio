@@ -81,6 +81,10 @@ export const validateProject = [
     .optional({ checkFalsy: true })
     .isURL({ require_protocol: true })
     .withMessage('Live URL must be a valid URL'),
+  body('commentsCount')
+    .optional()
+    .isInt({ min: 0 })
+    .withMessage('Comments must be a non-negative whole number'),
   validate,
 ];
 

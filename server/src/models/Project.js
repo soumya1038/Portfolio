@@ -51,6 +51,11 @@ const projectSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    commentsCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
     order: {
       type: Number,
       default: 0,

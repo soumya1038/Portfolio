@@ -1,6 +1,7 @@
 import Project from '../models/Project.js';
 import { ApiError } from '../middleware/error.middleware.js';
 import { deleteImagesByUrl } from '../services/cloudinary.service.js';
+import { fetchRepoDetails } from '../services/github.service.js';
 import { withImageRollback } from '../middleware/upload.middleware.js';
 
 /**
@@ -42,6 +43,36 @@ export const getProject = async (req, res, next) => {
       throw new ApiError(404, 'Project not found');
     }
 
+    if (project.githubUrl) {
+      try {
+        const repoDetails = await fetchRepoDetails(project.githubUrl);
+        const currentMeta = project.githubMeta?.toObject
+          ? project.githubMeta.toObject()
+          : (project.githubMeta || {});
+        const refreshedMeta = {
+          ...currentMeta,
+          ...sanitizeGithubMeta(repoDetails.githubMeta),
+        };
+        const liveCommentsCount = sanitizeCommentsCount(
+          repoDetails.commentsCount,
+          project.commentsCount || 0
+        );
+        const shouldUpdateMeta = JSON.stringify(currentMeta) !== JSON.stringify(refreshedMeta);
+        const shouldUpdateComments = liveCommentsCount !== (project.commentsCount || 0);
+
+        if (
+          shouldUpdateMeta ||
+          shouldUpdateComments
+        ) {
+          project.githubMeta = refreshedMeta;
+          project.commentsCount = liveCommentsCount;
+          await project.save();
+        }
+      } catch {
+        // Keep serving cached GitHub values if live refresh fails.
+      }
+    }
+
     res.json({
       success: true,
       data: project,
@@ -79,6 +110,13 @@ const sanitizeGithubMeta = (meta) => {
   return sanitized;
 };
 
+const sanitizeCommentsCount = (value, fallback = 0) => {
+  if (value === undefined || value === null || value === '') return fallback;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return fallback;
+  return Math.max(0, Math.floor(parsed));
+};
+
 /**
  * @desc    Create new project
  * @route   POST /api/projects
@@ -97,6 +135,7 @@ export const createProject = withImageRollback(async (req, res, next) => {
       liveUrl,
       source,
       featured,
+      commentsCount,
       githubMeta,
     } = req.body;
 
@@ -126,6 +165,7 @@ export const createProject = withImageRollback(async (req, res, next) => {
       liveUrl,
       source: source || 'manual',
       featured: featured || false,
+      commentsCount: sanitizeCommentsCount(commentsCount, 0),
       githubMeta: sanitizeGithubMeta(githubMeta),
     });
 
@@ -159,6 +199,7 @@ export const updateProject = async (req, res, next) => {
       liveUrl,
       source,
       featured,
+      commentsCount,
       order,
       githubMeta,
     } = req.body;
@@ -197,6 +238,9 @@ export const updateProject = async (req, res, next) => {
     if (liveUrl !== undefined) project.liveUrl = liveUrl;
     if (source !== undefined) project.source = source;
     if (featured !== undefined) project.featured = featured;
+    if (commentsCount !== undefined) {
+      project.commentsCount = sanitizeCommentsCount(commentsCount, project.commentsCount || 0);
+    }
     if (order !== undefined) project.order = order;
     if (githubMeta !== undefined) {
       const existingMeta = project.githubMeta?.toObject ? project.githubMeta.toObject() : (project.githubMeta || {});
