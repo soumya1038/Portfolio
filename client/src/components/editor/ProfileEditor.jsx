@@ -9,6 +9,8 @@ import {
   FiMail,
   FiLock,
   FiRefreshCcw,
+  FiChevronDown,
+  FiChevronUp,
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
@@ -65,6 +67,20 @@ function ProfileEditor({ portfolio }) {
     newPassword: '',
     confirmPassword: '',
   });
+  const [isSecurityOpen, setIsSecurityOpen] = useState(false);
+  const [activeSecurityForm, setActiveSecurityForm] = useState('changeEmail');
+
+  const openSecurityForm = (formType) => {
+    setIsSecurityOpen(true);
+    setActiveSecurityForm(formType);
+  };
+
+  const handleToggleSecurity = () => {
+    if (!isSecurityOpen) {
+      setActiveSecurityForm('changeEmail');
+    }
+    setIsSecurityOpen((prev) => !prev);
+  };
 
   const handleSecuritySuccess = (message) => {
     toast.success(message || 'Security update complete. Please log in again.');
@@ -285,24 +301,25 @@ function ProfileEditor({ portfolio }) {
   );
 
   return (
-    <div className="neo-panel p-6">
-      <p className="section-kicker">Profile</p>
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-        <h2 className="text-2xl font-bold text-ink">Profile Details</h2>
-        {!isEditing && (
-          <button
-            type="button"
-            onClick={() => setIsEditing(true)}
-            className="btn-primary flex items-center gap-2"
-          >
-            <FiEdit2 className="h-4 w-4" />
-            Edit Profile
-          </button>
-        )}
-      </div>
+    <div className="space-y-6">
+      <div className="neo-panel p-6">
+        <p className="section-kicker">Profile</p>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
+          <h2 className="text-2xl font-bold text-ink">Profile Details</h2>
+          {!isEditing && (
+            <button
+              type="button"
+              onClick={() => setIsEditing(true)}
+              className="btn-primary flex items-center gap-2"
+            >
+              <FiEdit2 className="h-4 w-4" />
+              Edit Profile
+            </button>
+          )}
+        </div>
 
-      {!isEditing ? (
-        <div className="space-y-6">
+        {!isEditing ? (
+          <div className="space-y-6">
           <div className="flex flex-col md:flex-row gap-6 items-start">
             <div className="w-28 h-28 rounded-2xl overflow-hidden border border-line bg-white/80 flex items-center justify-center">
               {profileDetails.profileImage ? (
@@ -595,180 +612,236 @@ function ProfileEditor({ portfolio }) {
               </button>
             </div>
           </div>
-        </form>
-      )}
-
-      <div className="mt-8 pt-6 border-t border-white/60 space-y-6">
-        <div>
-          <p className="section-kicker">Owner Security</p>
-          <h3 className="text-2xl font-bold text-ink flex items-center gap-2">
-            <FiShield className="h-5 w-5" />
-            Login Security
-          </h3>
-          <p className="text-sm text-gray-500 mt-1">
-            Use one registered recovery phone number for each security action.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
-          <form
-            onSubmit={handleChangeEmailSubmit}
-            className="rounded-2xl border border-line bg-white/75 p-4 space-y-3"
-          >
-            <h4 className="text-sm font-semibold text-ink flex items-center gap-2">
-              <FiMail className="h-4 w-4" />
-              Change Login Email
-            </h4>
-            <input
-              type="email"
-              value={changeEmailData.newEmail}
-              onChange={(e) =>
-                setChangeEmailData((prev) => ({ ...prev, newEmail: e.target.value }))
-              }
-              placeholder="New login email"
-              className="input-field"
-              autoComplete="email"
-            />
-            <input
-              type="password"
-              value={changeEmailData.currentPassword}
-              onChange={(e) =>
-                setChangeEmailData((prev) => ({ ...prev, currentPassword: e.target.value }))
-              }
-              placeholder="Current password"
-              className="input-field"
-              autoComplete="current-password"
-            />
-            <input
-              type="text"
-              value={changeEmailData.recoveryPhone}
-              onChange={(e) =>
-                setChangeEmailData((prev) => ({ ...prev, recoveryPhone: e.target.value }))
-              }
-              placeholder="Recovery phone (any one)"
-              className="input-field"
-            />
-            <button
-              type="submit"
-              disabled={changeEmailMutation.isPending}
-              className="btn-primary w-full flex items-center justify-center gap-2"
-            >
-              {changeEmailMutation.isPending ? 'Updating...' : 'Update Login Email'}
-            </button>
           </form>
+        )}
+      </div>
 
-          <form
-            onSubmit={handleChangePasswordSubmit}
-            className="rounded-2xl border border-line bg-white/75 p-4 space-y-3"
-          >
-            <h4 className="text-sm font-semibold text-ink flex items-center gap-2">
-              <FiLock className="h-4 w-4" />
-              Change Password
-            </h4>
-            <input
-              type="password"
-              value={changePasswordData.currentPassword}
-              onChange={(e) =>
-                setChangePasswordData((prev) => ({ ...prev, currentPassword: e.target.value }))
-              }
-              placeholder="Current password"
-              className="input-field"
-              autoComplete="current-password"
-            />
-            <input
-              type="text"
-              value={changePasswordData.recoveryPhone}
-              onChange={(e) =>
-                setChangePasswordData((prev) => ({ ...prev, recoveryPhone: e.target.value }))
-              }
-              placeholder="Recovery phone (any one)"
-              className="input-field"
-            />
-            <input
-              type="password"
-              value={changePasswordData.newPassword}
-              onChange={(e) =>
-                setChangePasswordData((prev) => ({ ...prev, newPassword: e.target.value }))
-              }
-              placeholder="New password (min 8 chars)"
-              className="input-field"
-              autoComplete="new-password"
-            />
-            <input
-              type="password"
-              value={changePasswordData.confirmPassword}
-              onChange={(e) =>
-                setChangePasswordData((prev) => ({ ...prev, confirmPassword: e.target.value }))
-              }
-              placeholder="Confirm new password"
-              className="input-field"
-              autoComplete="new-password"
-            />
-            <button
-              type="submit"
-              disabled={changePasswordMutation.isPending}
-              className="btn-primary w-full flex items-center justify-center gap-2"
-            >
-              {changePasswordMutation.isPending ? 'Updating...' : 'Update Password'}
-            </button>
-          </form>
+      <div className="neo-panel p-6">
+        <button
+          type="button"
+          onClick={handleToggleSecurity}
+          className="w-full flex items-start justify-between gap-4 text-left"
+          aria-expanded={isSecurityOpen}
+        >
+          <div>
+            <p className="section-kicker">Owner Security</p>
+            <h3 className="text-2xl font-bold text-ink flex items-center gap-2">
+              <FiShield className="h-5 w-5" />
+              Login Security
+            </h3>
+            <p className="text-sm text-gray-500 mt-1">
+              Use one registered recovery phone number for each security action.
+            </p>
+          </div>
+          <span className="mt-1 inline-flex h-8 w-8 items-center justify-center rounded-full border border-line bg-white/70 text-gray-600">
+            {isSecurityOpen ? <FiChevronUp className="h-4 w-4" /> : <FiChevronDown className="h-4 w-4" />}
+          </span>
+        </button>
 
-          <form
-            onSubmit={handleResetPasswordSubmit}
-            className="rounded-2xl border border-line bg-white/75 p-4 space-y-3"
-          >
-            <h4 className="text-sm font-semibold text-ink flex items-center gap-2">
-              <FiRefreshCcw className="h-4 w-4" />
-              Forgot Password Reset
-            </h4>
-            <input
-              type="email"
-              value={resetPasswordData.email}
-              onChange={(e) =>
-                setResetPasswordData((prev) => ({ ...prev, email: e.target.value }))
-              }
-              placeholder="Current login email"
-              className="input-field"
-              autoComplete="email"
-            />
-            <input
-              type="text"
-              value={resetPasswordData.recoveryPhone}
-              onChange={(e) =>
-                setResetPasswordData((prev) => ({ ...prev, recoveryPhone: e.target.value }))
-              }
-              placeholder="Recovery phone (any one)"
-              className="input-field"
-            />
-            <input
-              type="password"
-              value={resetPasswordData.newPassword}
-              onChange={(e) =>
-                setResetPasswordData((prev) => ({ ...prev, newPassword: e.target.value }))
-              }
-              placeholder="New password (min 8 chars)"
-              className="input-field"
-              autoComplete="new-password"
-            />
-            <input
-              type="password"
-              value={resetPasswordData.confirmPassword}
-              onChange={(e) =>
-                setResetPasswordData((prev) => ({ ...prev, confirmPassword: e.target.value }))
-              }
-              placeholder="Confirm new password"
-              className="input-field"
-              autoComplete="new-password"
-            />
-            <button
-              type="submit"
-              disabled={resetPasswordMutation.isPending}
-              className="btn-primary w-full flex items-center justify-center gap-2"
-            >
-              {resetPasswordMutation.isPending ? 'Resetting...' : 'Reset Password'}
-            </button>
-          </form>
-        </div>
+        {isSecurityOpen && (
+          <div className="mt-5 rounded-2xl border border-line bg-white/80 p-4 sm:p-5">
+            {activeSecurityForm === 'changeEmail' && (
+              <form onSubmit={handleChangeEmailSubmit} className="space-y-3">
+                <h4 className="text-sm font-semibold text-ink flex items-center gap-2">
+                  <FiMail className="h-4 w-4" />
+                  Change Login Email
+                </h4>
+                <input
+                  type="email"
+                  value={changeEmailData.newEmail}
+                  onChange={(e) =>
+                    setChangeEmailData((prev) => ({ ...prev, newEmail: e.target.value }))
+                  }
+                  placeholder="New login email"
+                  className="input-field"
+                  autoComplete="email"
+                />
+                <input
+                  type="password"
+                  value={changeEmailData.currentPassword}
+                  onChange={(e) =>
+                    setChangeEmailData((prev) => ({ ...prev, currentPassword: e.target.value }))
+                  }
+                  placeholder="Current password"
+                  className="input-field"
+                  autoComplete="current-password"
+                />
+                <input
+                  type="text"
+                  value={changeEmailData.recoveryPhone}
+                  onChange={(e) =>
+                    setChangeEmailData((prev) => ({ ...prev, recoveryPhone: e.target.value }))
+                  }
+                  placeholder="Recovery phone (any one)"
+                  className="input-field"
+                />
+                <button
+                  type="submit"
+                  disabled={changeEmailMutation.isPending}
+                  className="btn-primary w-full flex items-center justify-center gap-2"
+                >
+                  {changeEmailMutation.isPending ? 'Updating...' : 'Update Login Email'}
+                </button>
+                <div className="text-sm text-gray-600">
+                  Want to update your password instead?{' '}
+                  <button
+                    type="button"
+                    onClick={() => openSecurityForm('changePassword')}
+                    className="font-semibold text-primary-700 hover:text-primary-800 underline underline-offset-2"
+                  >
+                    Change Password
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {activeSecurityForm === 'changePassword' && (
+              <form onSubmit={handleChangePasswordSubmit} className="space-y-3">
+                <h4 className="text-sm font-semibold text-ink flex items-center gap-2">
+                  <FiLock className="h-4 w-4" />
+                  Change Password
+                </h4>
+                <input
+                  type="password"
+                  value={changePasswordData.currentPassword}
+                  onChange={(e) =>
+                    setChangePasswordData((prev) => ({ ...prev, currentPassword: e.target.value }))
+                  }
+                  placeholder="Current password"
+                  className="input-field"
+                  autoComplete="current-password"
+                />
+                <div className="-mt-1 text-right">
+                  <button
+                    type="button"
+                    onClick={() => openSecurityForm('resetPassword')}
+                    className="text-sm font-semibold text-primary-700 hover:text-primary-800 underline underline-offset-2"
+                  >
+                    Forgot password
+                  </button>
+                </div>
+                <input
+                  type="text"
+                  value={changePasswordData.recoveryPhone}
+                  onChange={(e) =>
+                    setChangePasswordData((prev) => ({ ...prev, recoveryPhone: e.target.value }))
+                  }
+                  placeholder="Recovery phone (any one)"
+                  className="input-field"
+                />
+                <input
+                  type="password"
+                  value={changePasswordData.newPassword}
+                  onChange={(e) =>
+                    setChangePasswordData((prev) => ({ ...prev, newPassword: e.target.value }))
+                  }
+                  placeholder="New password (min 8 chars)"
+                  className="input-field"
+                  autoComplete="new-password"
+                />
+                <input
+                  type="password"
+                  value={changePasswordData.confirmPassword}
+                  onChange={(e) =>
+                    setChangePasswordData((prev) => ({ ...prev, confirmPassword: e.target.value }))
+                  }
+                  placeholder="Confirm new password"
+                  className="input-field"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="submit"
+                  disabled={changePasswordMutation.isPending}
+                  className="btn-primary w-full flex items-center justify-center gap-2"
+                >
+                  {changePasswordMutation.isPending ? 'Updating...' : 'Update Password'}
+                </button>
+                <div className="text-sm text-gray-600">
+                  Need to change login email?{' '}
+                  <button
+                    type="button"
+                    onClick={() => openSecurityForm('changeEmail')}
+                    className="font-semibold text-primary-700 hover:text-primary-800 underline underline-offset-2"
+                  >
+                    Change Email
+                  </button>
+                </div>
+              </form>
+            )}
+
+            {activeSecurityForm === 'resetPassword' && (
+              <form onSubmit={handleResetPasswordSubmit} className="space-y-3">
+                <h4 className="text-sm font-semibold text-ink flex items-center gap-2">
+                  <FiRefreshCcw className="h-4 w-4" />
+                  Forgot Password Reset
+                </h4>
+                <input
+                  type="email"
+                  value={resetPasswordData.email}
+                  onChange={(e) =>
+                    setResetPasswordData((prev) => ({ ...prev, email: e.target.value }))
+                  }
+                  placeholder="Current login email"
+                  className="input-field"
+                  autoComplete="email"
+                />
+                <input
+                  type="text"
+                  value={resetPasswordData.recoveryPhone}
+                  onChange={(e) =>
+                    setResetPasswordData((prev) => ({ ...prev, recoveryPhone: e.target.value }))
+                  }
+                  placeholder="Recovery phone (any one)"
+                  className="input-field"
+                />
+                <input
+                  type="password"
+                  value={resetPasswordData.newPassword}
+                  onChange={(e) =>
+                    setResetPasswordData((prev) => ({ ...prev, newPassword: e.target.value }))
+                  }
+                  placeholder="New password (min 8 chars)"
+                  className="input-field"
+                  autoComplete="new-password"
+                />
+                <input
+                  type="password"
+                  value={resetPasswordData.confirmPassword}
+                  onChange={(e) =>
+                    setResetPasswordData((prev) => ({ ...prev, confirmPassword: e.target.value }))
+                  }
+                  placeholder="Confirm new password"
+                  className="input-field"
+                  autoComplete="new-password"
+                />
+                <button
+                  type="submit"
+                  disabled={resetPasswordMutation.isPending}
+                  className="btn-primary w-full flex items-center justify-center gap-2"
+                >
+                  {resetPasswordMutation.isPending ? 'Resetting...' : 'Reset Password'}
+                </button>
+                <div className="text-sm text-gray-600">
+                  <button
+                    type="button"
+                    onClick={() => openSecurityForm('changeEmail')}
+                    className="font-semibold text-primary-700 hover:text-primary-800 underline underline-offset-2"
+                  >
+                    Change Email
+                  </button>
+                  <span className="px-1.5 text-gray-400">/</span>
+                  <button
+                    type="button"
+                    onClick={() => openSecurityForm('changePassword')}
+                    className="font-semibold text-primary-700 hover:text-primary-800 underline underline-offset-2"
+                  >
+                    Change Password
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
