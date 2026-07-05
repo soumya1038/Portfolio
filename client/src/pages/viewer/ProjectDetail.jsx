@@ -20,6 +20,7 @@ import Loading from '../../components/common/Loading';
 import DemoVideoPlayer from '../../components/common/DemoVideoPlayer';
 import MarkdownContent from '../../components/common/MarkdownContent';
 import ImageFallbackIcon from '../../components/common/ImageFallbackIcon';
+import ScrollReveal from '../../components/common/ScrollReveal';
 import { projectService } from '../../services/project.service';
 import { isPdfAsset } from '../../utils/media';
 
@@ -156,185 +157,201 @@ function ProjectDetail() {
         <div className="pointer-events-none absolute -top-24 right-0 h-56 w-56 rounded-full bg-primary-200/40 blur-3xl"></div>
         <div className="pointer-events-none absolute -bottom-28 left-6 h-64 w-64 rounded-full bg-accent-200/30 blur-3xl"></div>
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <Link to="/" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary-700">
-            <FiArrowLeft className="h-4 w-4" />
-            Back to Portfolio
-          </Link>
+          <ScrollReveal animation="fade-right">
+            <Link to="/" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-primary-700">
+              <FiArrowLeft className="h-4 w-4" />
+              Back to Portfolio
+            </Link>
+          </ScrollReveal>
 
           <div className="mt-6 grid grid-cols-1 lg:grid-cols-[1.35fr_0.65fr] gap-8">
             <div className="space-y-6">
-              <div className="overflow-hidden rounded-3xl border border-white/70 shadow-soft bg-white">
-                {showHeroImageFallback ? (
-                  <div className="h-60 sm:h-72 md:h-96 bg-gradient-to-br from-slate-100 via-white to-cyan-50 flex items-center justify-center">
-                    <ImageFallbackIcon size={56} />
-                  </div>
-                ) : heroMediaIsPdf ? (
-                    <div className="h-60 sm:h-72 md:h-96 bg-gradient-to-br from-primary-100 via-white to-accent-100 flex flex-col items-center justify-center gap-4 p-6 text-center">
-                      <FiFileText className="h-14 w-14 text-primary-700" />
-                      <p className="text-sm text-gray-600">Cover file is a PDF document.</p>
-                      <a
-                        href={heroMedia}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="btn-secondary inline-flex items-center gap-2"
-                      >
-                        <FiExternalLink className="h-4 w-4" />
-                        Open PDF
-                      </a>
+              <ScrollReveal animation="fade-right" delay={200}>
+                <div className="overflow-hidden rounded-3xl border border-white/70 shadow-soft bg-white">
+                  {showHeroImageFallback ? (
+                    <div className="h-60 sm:h-72 md:h-96 bg-gradient-to-br from-slate-100 via-white to-cyan-50 flex items-center justify-center">
+                      <ImageFallbackIcon size={56} />
                     </div>
-                  ) : (
-                    <img
-                      src={heroMedia}
-                      alt={project.title}
-                      className="w-full h-60 sm:h-72 md:h-96 object-cover cursor-pointer"
-                      onClick={() => openLightbox(heroMedia, project.title)}
-                      onError={() => setHeroImageFailed(true)}
-                    />
-                )}
-              </div>
-
-              <div className="neo-panel p-6">
-                <div className="flex flex-wrap items-center gap-2 mb-3">
-                  {project.featured && (
-                    <span className="px-3 py-1 bg-accent-100 text-accent-700 text-xs font-semibold rounded-full">
-                      Featured
-                    </span>
-                  )}
-                  {project.source === 'github' && (
-                    <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">
-                      GitHub Import
-                    </span>
+                  ) : heroMediaIsPdf ? (
+                      <div className="h-60 sm:h-72 md:h-96 bg-gradient-to-br from-primary-100 via-white to-accent-100 flex flex-col items-center justify-center gap-4 p-6 text-center">
+                        <FiFileText className="h-14 w-14 text-primary-700" />
+                        <p className="text-sm text-gray-600">Cover file is a PDF document.</p>
+                        <a
+                          href={heroMedia}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn-secondary inline-flex items-center gap-2"
+                        >
+                          <FiExternalLink className="h-4 w-4" />
+                          Open PDF
+                        </a>
+                      </div>
+                    ) : (
+                      <img
+                        src={heroMedia}
+                        alt={project.title}
+                        className="w-full h-60 sm:h-72 md:h-96 object-cover cursor-pointer"
+                        onClick={() => openLightbox(heroMedia, project.title)}
+                        onError={() => setHeroImageFailed(true)}
+                      />
                   )}
                 </div>
-                <h1 className="text-3xl md:text-4xl font-bold text-ink">{project.title}</h1>
-                <MarkdownContent
-                  content={project.description || 'A focused build crafted for performance, clarity, and impact.'}
-                  className="mt-3"
-                />
+              </ScrollReveal>
 
-                {project.techStack?.length > 0 && (
-                  <div className="mt-5">
-                    <p className="text-sm font-semibold text-gray-600 mb-2">Tech Stack</p>
-                    <div className="flex flex-wrap gap-2">
-                      {project.techStack.map((tech) => (
-                        <span
-                          key={tech}
-                          className="px-3 py-1 rounded-full bg-white border border-line text-sm text-gray-700"
-                        >
-                          {tech}
-                        </span>
-                      ))}
-                    </div>
+              <ScrollReveal animation="fade-up" delay={350}>
+                <div className="neo-panel p-6">
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    {project.featured && (
+                      <span className="px-3 py-1 bg-accent-100 text-accent-700 text-xs font-semibold rounded-full">
+                        Featured
+                      </span>
+                    )}
+                    {project.source === 'github' && (
+                      <span className="px-3 py-1 bg-gray-100 text-gray-700 text-xs font-semibold rounded-full">
+                        GitHub Import
+                      </span>
+                    )}
                   </div>
-                )}
-              </div>
+                  <h1 className="text-3xl md:text-4xl font-bold text-ink">{project.title}</h1>
+                  <MarkdownContent
+                    content={project.description || 'A focused build crafted for performance, clarity, and impact.'}
+                    className="mt-3"
+                  />
+
+                  {project.techStack?.length > 0 && (
+                    <div className="mt-5">
+                      <p className="text-sm font-semibold text-gray-600 mb-2">Tech Stack</p>
+                      <div className="flex flex-wrap gap-2">
+                        {project.techStack.map((tech) => (
+                          <span
+                            key={tech}
+                            className="px-3 py-1 rounded-full bg-white border border-line text-sm text-gray-700"
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </ScrollReveal>
 
             </div>
 
             <aside className="space-y-6">
-              <div className="neo-panel p-6">
-                <h2 className="text-lg font-semibold text-ink mb-4">Project Links</h2>
-                <div className="flex flex-col gap-3">
-                  {project.liveUrl && (
-                    <a
-                      href={project.liveUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-primary flex items-center justify-center gap-2"
-                    >
-                      <FiGlobe className="h-4 w-4" />
-                      Live Demo
-                    </a>
-                  )}
-                  {project.githubUrl && (
-                    <a
-                      href={project.githubUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-secondary flex items-center justify-center gap-2"
-                    >
-                      <FiGithub className="h-4 w-4" />
-                      View Repository
-                    </a>
-                  )}
-                </div>
-              </div>
-
-              {project.githubUrl && (
+              <ScrollReveal animation="fade-left" delay={150}>
                 <div className="neo-panel p-6">
-                  <h2 className="text-lg font-semibold text-ink mb-4">Project Stats</h2>
-                  <div className="space-y-3 text-sm text-gray-600">
-                    {project.githubMeta?.stars !== undefined && (
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                          <FiStar className="h-4 w-4" />
-                          Stars
-                        </span>
-                        <span className="font-semibold text-ink">{project.githubMeta.stars}</span>
-                      </div>
+                  <h2 className="text-lg font-semibold text-ink mb-4">Project Links</h2>
+                  <div className="flex flex-col gap-3">
+                    {project.liveUrl && (
+                      <a
+                        href={project.liveUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-primary flex items-center justify-center gap-2"
+                      >
+                        <FiGlobe className="h-4 w-4" />
+                        Live Demo
+                      </a>
                     )}
-                    {project.githubMeta?.forks !== undefined && (
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                          <FiGitBranch className="h-4 w-4" />
-                          Forks
-                        </span>
-                        <span className="font-semibold text-ink">{project.githubMeta.forks}</span>
-                      </div>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <span className="flex items-center gap-2">
-                        <FiGitCommit className="h-4 w-4" />
-                        Commits
-                      </span>
-                      <span className="font-semibold text-ink">{totalCommits}</span>
-                    </div>
-                    {project.githubMeta?.language && (
-                      <div className="flex items-center justify-between">
-                        <span className="flex items-center gap-2">
-                          <FiTag className="h-4 w-4" />
-                          Language
-                        </span>
-                        <span className="font-semibold text-ink">{project.githubMeta.language}</span>
-                      </div>
+                    {project.githubUrl && (
+                      <a
+                        href={project.githubUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-secondary flex items-center justify-center gap-2"
+                      >
+                        <FiGithub className="h-4 w-4" />
+                        View Repository
+                      </a>
                     )}
                   </div>
                 </div>
+              </ScrollReveal>
+
+              {project.githubUrl && (
+                <ScrollReveal animation="fade-left" delay={300}>
+                  <div className="neo-panel p-6">
+                    <h2 className="text-lg font-semibold text-ink mb-4">Project Stats</h2>
+                    <div className="space-y-3 text-sm text-gray-600">
+                      {project.githubMeta?.stars !== undefined && (
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-2">
+                            <FiStar className="h-4 w-4" />
+                            Stars
+                          </span>
+                          <span className="font-semibold text-ink">{project.githubMeta.stars}</span>
+                        </div>
+                      )}
+                      {project.githubMeta?.forks !== undefined && (
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-2">
+                            <FiGitBranch className="h-4 w-4" />
+                            Forks
+                          </span>
+                          <span className="font-semibold text-ink">{project.githubMeta.forks}</span>
+                        </div>
+                      )}
+                      <div className="flex items-center justify-between">
+                        <span className="flex items-center gap-2">
+                          <FiGitCommit className="h-4 w-4" />
+                          Commits
+                        </span>
+                        <span className="font-semibold text-ink">{totalCommits}</span>
+                      </div>
+                      {project.githubMeta?.language && (
+                        <div className="flex items-center justify-between">
+                          <span className="flex items-center gap-2">
+                            <FiTag className="h-4 w-4" />
+                            Language
+                          </span>
+                          <span className="font-semibold text-ink">{project.githubMeta.language}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </ScrollReveal>
               )}
 
-              <div className="neo-panel p-6">
-                <h2 className="text-lg font-semibold text-ink mb-4">Timeline</h2>
-                <div className="space-y-2 text-sm text-gray-600">
-                  {createdAt && (
-                    <p className="flex items-center gap-2">
-                      <FiCalendar className="h-4 w-4" />
-                      Created: <span className="font-semibold text-ink">{createdAt}</span>
-                    </p>
-                  )}
-                  {updatedAt && (
-                    <p className="flex items-center gap-2">
-                      <FiCalendar className="h-4 w-4" />
-                      Updated: <span className="font-semibold text-ink">{updatedAt}</span>
-                    </p>
-                  )}
+              <ScrollReveal animation="fade-left" delay={450}>
+                <div className="neo-panel p-6">
+                  <h2 className="text-lg font-semibold text-ink mb-4">Timeline</h2>
+                  <div className="space-y-2 text-sm text-gray-600">
+                    {createdAt && (
+                      <p className="flex items-center gap-2">
+                        <FiCalendar className="h-4 w-4" />
+                        Created: <span className="font-semibold text-ink">{createdAt}</span>
+                      </p>
+                    )}
+                    {updatedAt && (
+                      <p className="flex items-center gap-2">
+                        <FiCalendar className="h-4 w-4" />
+                        Updated: <span className="font-semibold text-ink">{updatedAt}</span>
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
+              </ScrollReveal>
             </aside>
           </div>
 
           {galleryItems.length > 0 && (
             <div className="mt-10">
               <div className="space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
-                  <span className="inline-flex items-center px-5 py-2 rounded-full glass border border-white/60 shadow-soft text-xs sm:text-sm uppercase tracking-[0.35em] text-ink">
-                    Gallery
-                  </span>
-                </div>
+                <ScrollReveal animation="fade-up">
+                  <div className="flex flex-wrap items-center justify-between gap-2 mb-5">
+                    <span className="inline-flex items-center px-5 py-2 rounded-full glass border border-white/60 shadow-soft text-xs sm:text-sm uppercase tracking-[0.35em] text-ink">
+                      Gallery
+                    </span>
+                  </div>
+                </ScrollReveal>
                 <div className="rounded-3xl border border-white/70 bg-white/70 backdrop-blur-xl shadow-soft p-4 sm:p-6">
                   <div className="flex flex-wrap gap-4 sm:gap-5">
-                    {galleryItems.map((item) => (
-                      <div
+                    {galleryItems.map((item, index) => (
+                      <ScrollReveal
                         key={item.id}
+                        animation="scale-up"
+                        delay={index * 120 + 200}
                         className={galleryCardClass}
                       >
                         {item.type === 'video' ? (
@@ -377,7 +394,7 @@ function ProjectDetail() {
                             }
                           />
                         )}
-                      </div>
+                      </ScrollReveal>
                     ))}
                   </div>
                 </div>

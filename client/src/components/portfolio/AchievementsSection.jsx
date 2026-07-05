@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { FiExternalLink, FiFileText } from 'react-icons/fi';
 import MarkdownContent from '../common/MarkdownContent';
+import ScrollReveal from '../common/ScrollReveal';
 import { isPdfAsset } from '../../utils/media';
 
 const glyphs = [
@@ -225,11 +226,13 @@ function AchievementsSection({ achievements }) {
       </svg>
 
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-        <header className="relative text-center mb-16">
-          <p className="section-kicker">Achievements</p>
-          <h2 className="section-title mt-2">Achievement Roadmap</h2>
-          <p className="text-gray-600 mt-3">Certificates, awards, and milestones.</p>
-        </header>
+        <ScrollReveal animation="fade-up">
+          <header className="relative text-center mb-16">
+            <p className="section-kicker">Achievements</p>
+            <h2 className="section-title mt-2">Achievement Roadmap</h2>
+            <p className="text-gray-600 mt-3">Certificates, awards, and milestones.</p>
+          </header>
+        </ScrollReveal>
 
         <div ref={containerRef} className="relative overflow-visible">
           {svgSize.width > 0 && svgSize.height > 0 && paths.length > 0 && (
@@ -281,9 +284,12 @@ function AchievementsSection({ achievements }) {
                     itemRefs.current[index] = el;
                   }}
                   data-index={index}
-                  className={`grid grid-cols-1 md:grid-cols-[minmax(0,0.95fr)_auto_minmax(0,1.05fr)] gap-6 md:gap-6 lg:gap-8 items-center transition-all duration-700 ${
-                    isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-6'
+                  className={`grid grid-cols-1 md:grid-cols-[minmax(0,0.95fr)_auto_minmax(0,1.05fr)] gap-6 md:gap-6 lg:gap-8 items-center transition-all duration-[1100ms] ${
+                    isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'
                   }`}
+                  style={{
+                    transitionTimingFunction: 'cubic-bezier(0.22, 1, 0.36, 1)',
+                  }}
                 >
                   <div className="flex justify-center order-2 md:order-2">
                     <div

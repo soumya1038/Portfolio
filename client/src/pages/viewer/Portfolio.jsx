@@ -5,6 +5,7 @@ import { FiGithub, FiLinkedin, FiTwitter, FiGlobe, FiMail, FiMapPin } from 'reac
 import Navbar from '../../components/common/Navbar';
 import Footer from '../../components/common/Footer';
 import Loading from '../../components/common/Loading';
+import ScrollReveal from '../../components/common/ScrollReveal';
 import ProfileSection from '../../components/portfolio/ProfileSection';
 import SkillsSection from '../../components/portfolio/SkillsSection';
 import AchievementsSection from '../../components/portfolio/AchievementsSection';
@@ -291,6 +292,71 @@ function HomeRatingIcon({ size = 24, baseColor = '#dbeafe', accentColor = '#f5c2
         </clipPath>
       </defs>
     </svg>
+  );
+}
+
+function AnimatedCounter({ value, duration = 2000, isDecimal = false }) {
+  const [displayValue, setDisplayValue] = useState(isDecimal ? "0.0" : "0");
+  const elementRef = useRef(null);
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !hasAnimated.current) {
+          hasAnimated.current = true;
+          observer.disconnect();
+          setTimeout(() => {
+            const formatted = isDecimal 
+              ? Number(value).toFixed(1)
+              : Math.floor(Number(value)).toString();
+            setDisplayValue(formatted);
+          }, 100);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (elementRef.current) {
+      observer.observe(elementRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, [value, isDecimal]);
+
+  return (
+    <span ref={elementRef} className="inline-flex items-center select-none leading-none">
+      {displayValue.split('').map((char, index) => {
+        const isDigit = char >= '0' && char <= '9';
+        if (!isDigit) {
+          return (
+            <span key={index} className="inline-block mx-0.5 leading-none">
+              {char}
+            </span>
+          );
+        }
+        return (
+          <span 
+            key={index} 
+            className="inline-block overflow-hidden relative h-[1.1em] w-[0.62em] leading-none"
+          >
+            <span 
+              className="absolute left-0 top-0 flex flex-col transition-transform duration-[2000ms] ease-[cubic-bezier(0.16,1,0.3,1)]"
+              style={{ 
+                transform: `translateY(-${parseInt(char) * 10}%)`,
+                height: '1000%',
+              }}
+            >
+              {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((d) => (
+                <span key={d} className="h-[10%] flex items-center justify-center font-mono leading-none">
+                  {d}
+                </span>
+              ))}
+            </span>
+          </span>
+        );
+      })}
+    </span>
   );
 }
 
@@ -592,15 +658,17 @@ function Portfolio() {
       {portfolio?.skills?.length > 0 && (
         <section id="skills" className="py-16">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
-              <div>
-                <p className="section-kicker">Expertise</p>
-                <h2 className="section-title mt-2">Skills in Motion</h2>
-                <p className="text-gray-600 mt-3 max-w-2xl">
-                  A focused blend of frontend polish, backend resilience, and product-minded delivery.
-                </p>
+            <ScrollReveal animation="fade-up">
+              <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
+                <div>
+                  <p className="section-kicker">Expertise</p>
+                  <h2 className="section-title mt-2">Skills in Motion</h2>
+                  <p className="text-gray-600 mt-3 max-w-2xl">
+                    A focused blend of frontend polish, backend resilience, and product-minded delivery.
+                  </p>
+                </div>
               </div>
-            </div>
+            </ScrollReveal>
             <SkillsSection skills={portfolio.skills} />
           </div>
         </section>
@@ -646,18 +714,26 @@ function Portfolio() {
           {featuredProjects.length > 0 && (
             <section className="featured-projects-section relative py-20 overflow-hidden">
               <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
-                  <div>
-                    <p className="section-kicker featured-projects-kicker">Showcase</p>
-                    <h2 className="section-title mt-2 featured-projects-title">Featured Builds</h2>
-                    <p className="featured-projects-subtitle mt-3 max-w-2xl">
-                      A curated set of projects highlighting depth, polish, and measurable impact.
-                    </p>
+                <ScrollReveal animation="fade-up">
+                  <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
+                    <div>
+                      <p className="section-kicker featured-projects-kicker">Showcase</p>
+                      <h2 className="section-title mt-2 featured-projects-title">Featured Builds</h2>
+                      <p className="featured-projects-subtitle mt-3 max-w-2xl">
+                        A curated set of projects highlighting depth, polish, and measurable impact.
+                      </p>
+                    </div>
                   </div>
-                </div>
+                </ScrollReveal>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {featuredProjects.map((project) => (
-                    <ProjectCard key={project._id} project={project} featured />
+                  {featuredProjects.map((project, index) => (
+                    <ScrollReveal
+                      key={project._id}
+                      animation="fade-up"
+                      delay={index * 180}
+                    >
+                      <ProjectCard project={project} featured />
+                    </ScrollReveal>
                   ))}
                 </div>
               </div>
@@ -668,18 +744,26 @@ function Portfolio() {
           {otherProjects.length > 0 && (
             <section className="py-16">
               <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
-                  <div>
-                    <p className="section-kicker">Archive</p>
-                    <h2 className="section-title mt-2">More Projects</h2>
-                    <p className="text-gray-600 mt-3 max-w-2xl">
-                      Additional builds that showcase consistency, speed, and adaptability.
-                    </p>
+                <ScrollReveal animation="fade-up">
+                  <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-8">
+                    <div>
+                      <p className="section-kicker">Archive</p>
+                      <h2 className="section-title mt-2">More Projects</h2>
+                      <p className="text-gray-600 mt-3 max-w-2xl">
+                        Additional builds that showcase consistency, speed, and adaptability.
+                      </p>
+                    </div>
                   </div>
-                </div>
+                </ScrollReveal>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {otherProjects.map((project) => (
-                    <ProjectCard key={project._id} project={project} />
+                  {otherProjects.map((project, index) => (
+                    <ScrollReveal
+                      key={project._id}
+                      animation="fade-up"
+                      delay={index * 150}
+                    >
+                      <ProjectCard project={project} />
+                    </ScrollReveal>
                   ))}
                 </div>
               </div>
@@ -701,102 +785,175 @@ function Portfolio() {
       {/* Contact Section */}
       <section className="py-16 bg-ink text-white" id="contact">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <p className="section-kicker text-primary-200">Connect</p>
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">Let&apos;s Build Something Remarkable</h2>
-          <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
-            Interested in working together? Reach out and let&apos;s map the next launch.
-          </p>
+          <ScrollReveal animation="fade-up" duration={1100}>
+            <p className="section-kicker text-primary-200">Connect</p>
+            <h2 className="text-3xl md:text-4xl font-bold mb-4 mt-2">Let&apos;s Build Something Remarkable</h2>
+            <p className="text-gray-300 mb-8 max-w-2xl mx-auto">
+              Interested in working together? Reach out and let&apos;s map the next launch.
+            </p>
+          </ScrollReveal>
 
           <div className="contact-insights mx-auto">
-            <div className="contact-insight-card">
-              <div className="contact-insight-main">
-                <div className="contact-insight-icon">
-                  <VisitorIcon size={20} color="#e2f8ff" />
-                </div>
-                <div className="contact-insight-meta">
-                  <p className="contact-insight-label">Visitors</p>
-                  <p className="contact-insight-value">{formattedVisitors}</p>
+            <ScrollReveal animation="fade-right" duration={1300} delay={300}>
+              <div className="contact-insight-card">
+                <div className="contact-insight-main">
+                  <div className="contact-insight-icon">
+                    <VisitorIcon size={20} color="#e2f8ff" />
+                  </div>
+                  <div className="contact-insight-meta">
+                    <p className="contact-insight-label">Visitors</p>
+                    <p className="contact-insight-value">
+                      <AnimatedCounter value={uniqueVisitors} />
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            </ScrollReveal>
 
-            <button
-              type="button"
-              onClick={openRatingExperience}
-              className="contact-insight-card contact-insight-card--action"
-            >
-              <div className="contact-insight-main">
-                <div className="contact-insight-icon">
-                  <HomeRatingIcon size={20} baseColor="#dbeafe" accentColor="#f5c24b" />
+            <ScrollReveal animation="fade-left" duration={1300} delay={300}>
+              <button
+                type="button"
+                onClick={openRatingExperience}
+                className="contact-insight-card contact-insight-card--action"
+              >
+                <div className="contact-insight-main">
+                  <div className="contact-insight-icon">
+                    <HomeRatingIcon size={20} baseColor="#dbeafe" accentColor="#f5c24b" />
+                  </div>
+                  <div className="contact-insight-meta">
+                    <p className="contact-insight-label">Appreciation</p>
+                    <p className="contact-insight-value flex items-center gap-1">
+                      <AnimatedCounter value={averageRating} isDecimal />
+                      <span className="opacity-90">/</span>
+                      <span className="opacity-90">5.0</span>
+                      <span className="opacity-90 ml-0.5">(</span>
+                      <AnimatedCounter value={totalRatings} />
+                      <span className="opacity-90">)</span>
+                    </p>
+                  </div>
                 </div>
-                <div className="contact-insight-meta">
-                  <p className="contact-insight-label">Appreciation</p>
-                  <p className="contact-insight-value">{averageRating.toFixed(1)} / 5.0 ({formattedTotalRatings})</p>
-                </div>
-              </div>
-            </button>
+              </button>
+            </ScrollReveal>
           </div>
 
-          <div className="flex justify-center items-center gap-6 flex-wrap">
+          <div className="flex justify-center items-center gap-6 flex-wrap mt-8">
             {portfolio?.email && (
-              <a
-                href={`mailto:${portfolio.email}`}
-                className="flex items-center gap-2 text-gray-200 hover:text-white transition-colors"
-              >
-                <FiMail className="h-5 w-5" />
-                {portfolio.email}
-              </a>
+              <ScrollReveal animation="fade-right" duration={1100} delay={500}>
+                <a
+                  href={`mailto:${portfolio.email}`}
+                  className="flex items-center gap-2 text-gray-200 hover:text-white transition-colors"
+                >
+                  <FiMail className="h-5 w-5" />
+                  {portfolio.email}
+                </a>
+              </ScrollReveal>
             )}
             {portfolio?.location && (
-              <span className="flex items-center gap-2 text-gray-300">
-                <FiMapPin className="h-5 w-5" />
-                {portfolio.location}
-              </span>
+              <ScrollReveal animation="fade-left" duration={1100} delay={500}>
+                <span className="flex items-center gap-2 text-gray-300">
+                  <FiMapPin className="h-5 w-5" />
+                  {portfolio.location}
+                </span>
+              </ScrollReveal>
             )}
           </div>
 
           {/* Social Links */}
-          <div className="flex justify-center gap-4 mt-8">
-            {portfolio?.socialLinks?.github && (
-              <a
-                href={portfolio.socialLinks.github}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-              >
-                <FiGithub className="h-6 w-6" />
-              </a>
-            )}
-            {portfolio?.socialLinks?.linkedin && (
-              <a
-                href={portfolio.socialLinks.linkedin}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-              >
-                <FiLinkedin className="h-6 w-6" />
-              </a>
-            )}
-            {portfolio?.socialLinks?.twitter && (
-              <a
-                href={portfolio.socialLinks.twitter}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-              >
-                <FiTwitter className="h-6 w-6" />
-              </a>
-            )}
-            {websiteUrl && (
-              <a
-                href={websiteUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-              >
-                <WebsiteLinkIcon website={websiteUrl} className="h-6 w-6" />
-              </a>
-            )}
+          <div className="flex justify-center items-center gap-4 mt-8">
+            {(() => {
+              const socialLinksToRender = [];
+              if (portfolio?.socialLinks?.github) {
+                socialLinksToRender.push({
+                  key: 'github',
+                  element: (
+                    <a
+                      href={portfolio.socialLinks.github}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+                    >
+                      <FiGithub className="h-6 w-6" />
+                    </a>
+                  ),
+                });
+              }
+              if (portfolio?.socialLinks?.linkedin) {
+                socialLinksToRender.push({
+                  key: 'linkedin',
+                  element: (
+                    <a
+                      href={portfolio.socialLinks.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+                    >
+                      <FiLinkedin className="h-6 w-6" />
+                    </a>
+                  ),
+                });
+              }
+              if (portfolio?.socialLinks?.twitter) {
+                socialLinksToRender.push({
+                  key: 'twitter',
+                  element: (
+                    <a
+                      href={portfolio.socialLinks.twitter}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+                    >
+                      <FiTwitter className="h-6 w-6" />
+                    </a>
+                  ),
+                });
+              }
+              if (websiteUrl) {
+                socialLinksToRender.push({
+                  key: 'website',
+                  element: (
+                    <a
+                      href={websiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
+                    >
+                      <WebsiteLinkIcon website={websiteUrl} className="h-6 w-6" />
+                    </a>
+                  ),
+                });
+              }
+
+              return socialLinksToRender.map((social, index) => {
+                let anim = 'fade-up';
+                let delayOffset = 800;
+
+                if (socialLinksToRender.length >= 3) {
+                  if (index === 0) {
+                    anim = 'fade-right';
+                  } else if (index === socialLinksToRender.length - 1) {
+                    anim = 'fade-left';
+                  } else {
+                    anim = 'fade-up';
+                    delayOffset = 900;
+                  }
+                } else if (socialLinksToRender.length === 2) {
+                  if (index === 0) anim = 'fade-right';
+                  if (index === 1) anim = 'fade-left';
+                }
+
+                return (
+                  <ScrollReveal
+                    key={social.key}
+                    animation={anim}
+                    duration={1200}
+                    delay={delayOffset}
+                    className="inline-flex"
+                  >
+                    {social.element}
+                  </ScrollReveal>
+                );
+              });
+            })()}
           </div>
         </div>
       </section>
